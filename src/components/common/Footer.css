@@ -1,0 +1,16 @@
+/* src/components/common/Footer.css */
+.footer-text {
+  font-family: 'Satisfy', cursive;
+  background: linear-gradient(
+    135deg,
+    #FFD6E0 0%,
+    #FFEFB8 25%,
+    #D1F0C2 50%,
+    #C5E7F7 75%,
+    #E9D1F8 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}

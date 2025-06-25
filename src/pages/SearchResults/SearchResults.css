@@ -1,0 +1,88 @@
+/* src/pages/SearchResults/SearchResults.css */
+.search-results-container {
+  min-height: 100vh;
+}
+
+.recipe-result-card {
+  transition: all 0.3s ease;
+}
+
+.recipe-result-card:hover {
+  transform: translateY(-5px);
+}
+
+.recipe-result-card img {
+  transition: transform 0.3s ease;
+}
+
+.recipe-result-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Line clamp for descriptions */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2; /* Standard property */
+  overflow: hidden;
+}
+
+/* Radio and checkbox styling */
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #ec4899;
+}
+
+/* Sticky sidebar on desktop */
+@media (min-width: 1024px) {
+  aside .sticky {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* Mobile filters */
+@media (max-width: 1023px) {
+  aside {
+    margin-bottom: 2rem;
+  }
+  
+  aside > div {
+    position: static;
+  }
+}
+
+/* Pagination hover effects */
+nav button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Popular searches hover effect */
+.popular-searches a {
+  transition: all 0.2s ease;
+}
+
+.popular-searches a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

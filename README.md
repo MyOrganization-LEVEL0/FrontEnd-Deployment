@@ -68,3 +68,107 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+
+
+
+
+
+# BASTA Desserts - React Frontend
+
+A modern React application for BASTA Desserts, a website that provides Filipino dessert recipes.
+
+## Project Structure
+
+```
+basta-desserts/
+├── public/                 # Static files
+├── src/
+│   ├── components/        # Reusable components
+│   │   ├── common/       # Navigation, Footer
+│   │   ├── cards/        # Recipe, Category, Team cards
+│   │   └── forms/        # Contact form
+│   ├── pages/            # Page components
+│   │   ├── Landing/
+│   │   ├── Categories/
+│   │   ├── About/
+│   │   ├── Recipes/
+│   │   ├── Login/
+│   │   └── SignUp/
+│   ├── data/             # Static data
+│   └── utils/            # Utility functions
+```
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm start
+   ```
+
+## Features
+
+- **Modular Architecture**: Clean separation of components
+- **React Router**: For navigation between pages
+- **Responsive Design**: Mobile-friendly using Tailwind CSS
+- **Reusable Components**: Card components, forms, etc.
+- **State Management**: Using React hooks for local state
+
+## Pages
+
+- **Landing**: Homepage with featured recipes and contact form
+- **Categories**: Browse recipes by category
+- **Recipes**: All recipes with search and alphabetical filtering
+- **About**: Team information and project story
+- **Login/SignUp**: User authentication pages
+
+## Next Steps for Full-Stack Integration
+
+1. **API Integration**:
+   - Create service files for API calls
+   - Update components to fetch data from Django backend
+   - Implement authentication with JWT tokens
+
+2. **State Management**:
+   - Add Redux or Context API for global state
+   - Manage user authentication state
+   - Handle recipe data and favorites
+
+3. **Additional Features**:
+   - Recipe detail pages
+   - User profiles
+   - Recipe upload functionality
+   - Rating and review system
+   - Search functionality
+   - Filipino recipe categories
+
+## Django Backend Integration Points
+
+The frontend is ready to connect with these Django endpoints:
+
+- `/api/auth/login/` - User login
+- `/api/auth/register/` - User registration
+- `/api/recipes/` - Get all recipes
+- `/api/recipes/<id>/` - Get single recipe
+- `/api/categories/` - Get all categories
+- `/api/users/profile/` - User profile
+
+## Development Team
+
+- Billie Earl Angeles - Full-stack Developer
+- Jerico Armendi - Frontend Developer
+- John Vincent Baga - Backend Developer
+- Abdul Didaagun - Backend Developer
+- Anton Ramos - Software Engineer
+- Paula Nicole Reyes - System Administrator
+- John Michael Villarosa - Systems Optimization
+
+## License
+
+© 2025 BASTA Desserts. All rights reserved.

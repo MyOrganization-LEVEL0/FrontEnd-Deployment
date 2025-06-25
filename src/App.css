@@ -1,38 +1,37 @@
-.App {
-  text-align: center;
+/* src/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Satisfy&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #FFF8FA;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.logo-text {
+  font-family: 'Satisfy', cursive;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.pastel-gradient {
+  background: linear-gradient(
+    135deg,
+    #FFD6E0 0%,
+    #FFEFB8 25%,
+    #D1F0C2 50%,
+    #C5E7F7 75%,
+    #E9D1F8 100%
+  );
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Alternative gradient text style with better visibility */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    #FF69B4 0%,
+    #FFB6C1 25%,
+    #FFA500 50%,
+    #FF6B6B 75%,
+    #FF69B4 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

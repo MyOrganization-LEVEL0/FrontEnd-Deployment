@@ -1,0 +1,41 @@
+/* src/pages/Recipes/Recipes.css */
+.search-input {
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 214, 224, 0.5);
+}
+
+.letter-nav {
+  transition: all 0.2s ease;
+}
+
+.letter-nav:hover {
+  background-color: #FFD6E0;
+  color: white;
+}
+
+.letter-nav.active {
+  background-color: #FFD6E0;
+  color: white;
+  font-weight: 600;
+}
+
+.recipe-card {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+}
+
+.recipe-card:hover .recipe-image {
+  transform: scale(1.05);
+}
+
+.recipe-image {
+  transition: transform 0.5s ease;
+}

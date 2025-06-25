@@ -1,0 +1,44 @@
+/* src/components/common/Navigation.css */
+.logo-text {
+  background: linear-gradient(
+    135deg,
+    #FF69B4 0%,    /* Hot pink */
+    #FFB6C1 25%,   /* Light pink */
+    #FFA500 50%,   /* Orange */
+    #FF6B6B 75%,   /* Coral */
+    #FF69B4 100%   /* Back to hot pink */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
+  display: inline-block;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  .logo-text {
+    background: none;
+    color: #FF69B4;
+  }
+}
+
+.nav-button {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-button:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: currentColor;
+  transition: width 0.3s ease;
+}
+
+.nav-button:hover:after {
+  width: 100%;
+}
