@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
 
@@ -69,75 +70,39 @@ const AdminDashboard = () => {
         reportedById: 8,
         reason: 'Inappropriate content',
         description: 'User posted offensive comments on my recipe and used inappropriate language.',
-        reportedAt: '2024-02-15T14:30:00Z',
+        reportedAt: '2024-02-15T14:20:00Z',
         status: 'pending',
-        severity: 'high',
-        evidence: 'Screenshot of offensive comments',
-        relatedRecipe: 'Classic Leche Flan'
+        priority: 'high',
+        evidence: 'Screenshots attached'
       },
       {
         id: 2,
-        reportedUser: 'SpamBot999',
+        reportedUser: 'SpammerAccount',
         reportedUserId: 12,
-        reportedBy: 'ChefMaria',
-        reportedById: 3,
-        reason: 'Spam/Bot activity',
-        description: 'This user keeps posting the same generic comments on all recipes.',
+        reportedBy: 'CommunityMod',
+        reportedById: 15,
+        reason: 'Spam/Self-promotion',
+        description: 'User constantly posting links to external websites and promoting their own business.',
         reportedAt: '2024-02-14T11:15:00Z',
         status: 'pending',
-        severity: 'medium',
-        evidence: 'Multiple identical comments',
-        relatedRecipe: 'Multiple recipes'
-      },
-      {
-        id: 3,
-        reportedUser: 'CopyPaste101',
-        reportedUserId: 7,
-        reportedBy: 'OriginalChef',
-        reportedById: 15,
-        reason: 'Recipe plagiarism',
-        description: 'This user copied my entire recipe without permission and claimed it as their own.',
-        reportedAt: '2024-02-13T16:45:00Z',
-        status: 'investigating',
-        severity: 'high',
-        evidence: 'Original recipe links',
-        relatedRecipe: 'Stolen Ube Cake Recipe'
+        priority: 'medium',
+        evidence: 'Multiple comment screenshots'
       }
     ]);
   }, []);
 
-  // Recipe moderation functions
-  const handleRecipeAction = (action, recipeId, reason = '') => {
+  // Recipe management functions
+  const handleRecipeAction = (action, recipeId, reason = null) => {
     setLoading(true);
     setTimeout(() => {
       setRecipes(prev => prev.map(recipe => 
-        recipe.id === recipeId ? { ...recipe, status: action, moderationReason: reason } : recipe
+        recipe.id === recipeId ? { ...recipe, status: action, rejectionReason: reason } : recipe
       ));
       setLoading(false);
       
-      // Show success message
       const actionText = action === 'approved' ? 'approved' : 'rejected';
       alert(`Recipe ${actionText} successfully!`);
     }, 1000);
-  };
-
-  const handleBulkRecipeAction = (action) => {
-    if (selectedItems.length === 0) {
-      alert('Please select recipes first');
-      return;
-    }
-    
-    const confirmMessage = `Are you sure you want to ${action} ${selectedItems.length} recipe(s)?`;
-    if (window.confirm(confirmMessage)) {
-      setLoading(true);
-      setTimeout(() => {
-        setRecipes(prev => prev.map(recipe => 
-          selectedItems.includes(recipe.id) ? { ...recipe, status: action } : recipe
-        ));
-        setSelectedItems([]);
-        setLoading(false);
-      }, 1500);
-    }
   };
 
   // User report functions
@@ -158,7 +123,6 @@ const AdminDashboard = () => {
   const pendingRecipes = recipes.filter(recipe => recipe.status === 'pending');
   const flaggedRecipes = recipes.filter(recipe => recipe.flagged || recipe.reportCount > 0);
   const pendingReports = userReports.filter(report => report.status === 'pending');
-  const allReports = userReports;
 
   // Get time ago helper
   const getTimeAgo = (dateString) => {
@@ -232,20 +196,6 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">Pending Recipe Approvals</h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleBulkRecipeAction('approved')}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                >
-                  Bulk Approve
-                </button>
-                <button
-                  onClick={() => handleBulkRecipeAction('rejected')}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                >
-                  Bulk Reject
-                </button>
-              </div>
             </div>
 
             <div className="grid gap-6">
@@ -253,41 +203,26 @@ const AdminDashboard = () => {
                 <div key={recipe.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <div className="p-6">
                     <div className="flex items-start gap-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(recipe.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedItems([...selectedItems, recipe.id]);
-                          } else {
-                            setSelectedItems(selectedItems.filter(id => id !== recipe.id));
-                          }
-                        }}
-                        className="mt-1 rounded border-gray-300"
-                      />
-                      
                       <img
                         src={recipe.image}
                         alt={recipe.title}
-                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                        className="w-24 h-24 object-cover rounded-lg"
                       />
-                      
-                      <div className="flex-grow">
+                      <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900">{recipe.title}</h3>
-                            <p className="text-sm text-gray-600">by {recipe.author} • {recipe.category}</p>
-                            <p className="text-xs text-gray-500">{getTimeAgo(recipe.submittedAt)}</p>
+                            <p className="text-sm text-gray-600">by {recipe.author}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             {recipe.flagged && (
                               <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                🚩 Flagged
+                                🚩 Auto-flagged
                               </span>
                             )}
                             {recipe.reportCount > 0 && (
                               <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                                {recipe.reportCount} reports
+                                {recipe.reportCount} user reports
                               </span>
                             )}
                           </div>
@@ -344,14 +279,6 @@ const AdminDashboard = () => {
                           >
                             👁️ Full Preview
                           </button>
-                          <button
-                            onClick={() => {
-                              alert('Contacting author for clarification...');
-                            }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-                          >
-                            💬 Contact Author
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -367,7 +294,7 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900">Flagged Content Review</h2>
             
-            <div className="grid gap-4">
+            <div className="grid gap-6">
               {flaggedRecipes.map((recipe) => (
                 <div key={recipe.id} className="bg-white rounded-lg shadow-sm border border-red-200">
                   <div className="p-6">
@@ -375,10 +302,9 @@ const AdminDashboard = () => {
                       <img
                         src={recipe.image}
                         alt={recipe.title}
-                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        className="w-24 h-24 object-cover rounded-lg"
                       />
-                      
-                      <div className="flex-grow">
+                      <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900">{recipe.title}</h3>
@@ -387,12 +313,12 @@ const AdminDashboard = () => {
                           <div className="flex items-center gap-2">
                             {recipe.flagged && (
                               <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                🚩 Auto-flagged
+                                🚩 Flagged
                               </span>
                             )}
                             {recipe.reportCount > 0 && (
                               <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                                {recipe.reportCount} user reports
+                                {recipe.reportCount} reports
                               </span>
                             )}
                           </div>
@@ -414,10 +340,10 @@ const AdminDashboard = () => {
                             ❌ Remove Content
                           </button>
                           <button
-                            onClick={() => alert('Viewing detailed reports...')}
+                            onClick={() => alert('Opening detailed review...')}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                           >
-                            📋 View Reports
+                            🔍 Detailed Review
                           </button>
                         </div>
                       </div>
@@ -434,14 +360,14 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900">User Reports</h2>
             
-            <div className="grid gap-4">
-              {allReports.map((report) => (
+            <div className="grid gap-6">
+              {userReports.map((report) => (
                 <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          Report against: <span className="text-red-600">{report.reportedUser}</span>
+                          Report against: {report.reportedUser}
                         </h3>
                         <p className="text-sm text-gray-600">
                           Reported by: {report.reportedBy} • {getTimeAgo(report.reportedAt)}
@@ -449,50 +375,31 @@ const AdminDashboard = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          report.severity === 'high' ? 'bg-red-100 text-red-800' :
-                          report.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          report.priority === 'high' ? 'bg-red-100 text-red-800' :
+                          report.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-green-100 text-green-800'
                         }`}>
-                          {report.severity} priority
+                          {report.priority} priority
                         </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          report.status === 'investigating' ? 'bg-blue-100 text-blue-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {report.status}
+                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                          {report.reason}
                         </span>
                       </div>
                     </div>
                     
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Reason:</h4>
-                        <p className="text-sm text-gray-700">{report.reason}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Related Content:</h4>
-                        <p className="text-sm text-gray-700">{report.relatedRecipe}</p>
-                      </div>
-                    </div>
-                    
                     <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-1">Description:</h4>
-                      <p className="text-sm text-gray-700">{report.description}</p>
+                      <h4 className="font-medium text-gray-900 mb-2">Description:</h4>
+                      <p className="text-gray-700">{report.description}</p>
                     </div>
                     
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-1">Evidence:</h4>
-                      <p className="text-sm text-gray-700">{report.evidence}</p>
-                    </div>
+                    {report.evidence && (
+                      <div className="mb-4">
+                        <h4 className="font-medium text-gray-900 mb-2">Evidence:</h4>
+                        <p className="text-sm text-gray-600">{report.evidence}</p>
+                      </div>
+                    )}
                     
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => handleReportAction('investigating', report.id)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                      >
-                        🔍 Investigate
-                      </button>
+                    <div className="flex gap-3">
                       <button
                         onClick={() => handleReportAction('resolved', report.id)}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -503,7 +410,13 @@ const AdminDashboard = () => {
                         onClick={() => handleReportAction('dismissed', report.id)}
                         className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
                       >
-                        ❌ Dismiss
+                        ❌ Dismiss Report
+                      </button>
+                      <button
+                        onClick={() => handleReportAction('investigating', report.id)}
+                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
+                      >
+                        🔍 Mark as Investigating
                       </button>
                       <button
                         onClick={() => alert('Viewing user profile and history...')}
