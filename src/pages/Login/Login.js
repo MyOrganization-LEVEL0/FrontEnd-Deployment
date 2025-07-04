@@ -1,31 +1,53 @@
 // src/pages/Login/Login.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import useFormValidation from '../../hooks/useFormValidation';
+import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
+  
+  const {
+    values,
+    errors,
+    touched,
+    submitStatus,
+    isSubmitting,
+    setIsSubmitting,
+    handleChange,
+    handleBlur,
+    validateAll,
+    setSubmitMessage
+  } = useFormValidation(
+    { email: '', password: '', rememberMe: false },
+    { email: validationRules.email, password: validationRules.password }
+  );
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.email && formData.password) {
-      alert('Login successful! Welcome to BASTA Desserts.');
-      navigate('/');
-    } else {
-      alert('Please enter both email and password.');
+    
+    if (!validateAll()) {
+      setSubmitMessage('error', 'Please fill in all required fields.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Replace this with your actual API call
+      console.log('Login data:', { email: values.email, password: values.password });
+      
+      setSubmitMessage('success', 'Login successful! Welcome to BASTA Desserts.');
+      setTimeout(() => navigate('/'), 2000);
+      
+    } catch (error) {
+      setSubmitMessage('error', 'Login failed. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -41,62 +63,60 @@ const Login = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="your@email.com"
-                />
-              </div>
+              <SubmitStatus status={submitStatus} />
+              
+              <FormInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="your@email.com"
+                value={values.email}
+                error={errors.email}
+                touched={touched.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="email"
+                required
+              />
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="••••••••"
-                />
-              </div>
+              <FormInput
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={values.password}
+                error={errors.password}
+                touched={touched.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="current-password"
+                required
+              />
 
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="rememberMe"
-                  type="checkbox"
-                  checked={formData.rememberMe}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-purple-500 focus:ring-purple-400 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
+              <div className="flex items-center justify-between">
+                <label className="flex items-center">
+                  <input
+                    id="rememberMe"
+                    name="rememberMe"
+                    type="checkbox"
+                    checked={values.rememberMe}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-purple-500 focus:ring-purple-400 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 block text-sm text-gray-700">Remember me</span>
                 </label>
-              </div>
-
-              <div>
-                <button
-                  type="submit"
-                  className="btn-hover-effect w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white font-medium bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400"
+                
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-purple-500 hover:text-purple-600 font-medium transition"
                 >
-                  Sign in
-                </button>
+                  Forgot password?
+                </Link>
               </div>
+
+              <SubmitButton isSubmitting={isSubmitting}>
+                Sign In
+              </SubmitButton>
             </form>
 
             <div className="mt-6 text-center">

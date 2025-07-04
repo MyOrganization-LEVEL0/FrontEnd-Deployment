@@ -1,0 +1,45 @@
+/* AdminDashboard.css */
+.admin-dashboard {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.recipe-card {
+  transition: all 0.3s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.report-card {
+  transition: all 0.3s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.priority-badge {
+  animation: pulse 2s infinite;
+}
+
+.priority-badge.high {
+  animation: pulse 1.5s infinite;
+}
+
+.action-button {
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}

@@ -1,99 +1,57 @@
-/* src/pages/RecipeDetail/RecipeDetail.css */
-.recipe-detail-container {
-  min-height: 100vh;
-}
-
-.recipe-hero {
-  background-color: #FFF8FA;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.back-button {
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  transform: translateX(-3px);
-}
-
-.main-image img {
+/* RecipeDetail.css */
+.recipe-image {
   transition: transform 0.3s ease;
 }
 
-.main-image:hover img {
+.favorite-button,
+.print-button {
+  transition: all 0.2s ease;
+}
+
+.favorite-button:hover,
+.print-button:hover {
   transform: scale(1.05);
 }
 
-.recipe-tags span {
-  transition: all 0.2s ease;
+.instruction-step {
+  transition: background-color 0.2s ease;
 }
 
-.recipe-tags span:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.instruction-step:hover {
+  background-color: #f9fafb;
 }
 
-.step-card {
-  transition: all 0.3s ease;
-  cursor: pointer;
+.comment-item {
+  transition: background-color 0.2s ease;
 }
 
-.step-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.comment-item:hover {
+  background-color: #f9fafb;
 }
 
-.nutrition-card {
-  transition: all 0.3s ease;
-}
-
-.nutrition-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Print Styles */
+/* Print styles */
 @media print {
-  .recipe-hero,
-  .reviews-section,
-  .related-recipes,
-  .back-button,
-  button {
+  .no-print,
+  .favorite-button,
+  .print-button,
+  .comment-section,
+  .shadow-sm {
     display: none !important;
   }
-
-  .recipe-content {
-    padding: 0 !important;
+  
+  body {
+    background: white !important;
   }
-
-  .ingredients-section,
-  .instructions-section {
-    page-break-inside: avoid;
+  
+  .bg-gray-50 {
+    background: white !important;
   }
-}
-
-/* Ingredient checkbox styling */
-input[type="checkbox"] {
-  cursor: pointer;
-}
-
-input[type="checkbox"]:checked {
-  accent-color: #ec4899;
-}
-
-/* Tab hover effects */
-.recipe-content button {
-  transition: all 0.2s ease;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .recipe-meta {
-    grid-template-columns: repeat(2, 1fr);
+  
+  .sticky {
+    position: static !important;
   }
-
-  .sidebar {
-    margin-top: 2rem;
+  
+  .rounded-lg {
+    border-radius: 0 !important;
   }
 }

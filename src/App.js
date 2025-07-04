@@ -12,6 +12,10 @@ import Login from './pages/Login/Login';
 import SignUp from './pages/SignUp/SignUp';
 import Dashboard from './pages/Dashboard/Dashboard';
 import SearchResults from './pages/SearchResults/SearchResults';
+import SuperadminDashboard from './pages/SuperadminDashboard/SuperadminDashboard';
+import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
+import Viewer1Dashboard from './pages/Viewer1Dashboard/Viewer1Dashboard';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import './App.css';
 
 function App() {
@@ -33,6 +37,13 @@ function App() {
               <Footer />
             </>
           } />
+          <Route path="/forgot-password" element={
+            <>
+              <Navigation />
+              <ForgotPassword />
+              <Footer />
+            </>
+          } />
           <Route path="*" element={
             <>
               <Navigation />
@@ -45,6 +56,9 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/search" element={<SearchResults />} />
+                  <Route path="/superadmin" element={<SuperadminDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/viewer1" element={<Viewer1Dashboard />} />
                 </Routes>
               </main>
               <Footer />

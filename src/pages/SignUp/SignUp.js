@@ -1,36 +1,62 @@
 // src/pages/SignUp/SignUp.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import useFormValidation from '../../hooks/useFormValidation';
+import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
 import './SignUp.css';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  
+  const {
+    values,
+    errors,
+    touched,
+    submitStatus,
+    isSubmitting,
+    setIsSubmitting,
+    handleChange,
+    handleBlur,
+    validateAll,
+    setSubmitMessage
+  } = useFormValidation(
+    { fullname: '', email: '', password: '', confirmPassword: '' },
+    { 
+      fullname: validationRules.fullname,
+      email: validationRules.email, 
+      password: validationRules.password,
+      confirmPassword: validationRules.confirmPassword
+    }
+  );
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    
+    if (!validateAll()) {
+      setSubmitMessage('error', 'Please complete all required fields to create your account. ');
       return;
     }
-    if (formData.fullname && formData.email && formData.password) {
-      alert('Sign up successful! Welcome to BASTA Desserts.');
-      navigate('/login');
-    } else {
-      alert('Please fill in all fields.');
+
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Replace this with your actual API call
+      console.log('SignUp data:', { 
+        fullname: values.fullname, 
+        email: values.email, 
+        password: values.password 
+      });
+      
+      setSubmitMessage('success', 'Account created successfully! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
+      
+    } catch (error) {
+      setSubmitMessage('error', 'Sign up failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -41,86 +67,72 @@ const SignUp = () => {
           <div className="pastel-gradient h-3"></div>
           <div className="p-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Create an Account</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
               <p className="text-gray-600">Join us and start saving your favorite recipes</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="fullname" className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  id="fullname"
-                  name="fullname"
-                  type="text"
-                  required
-                  value={formData.fullname}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="Your Username"
-                />
-              </div>
+              <SubmitStatus status={submitStatus} />
+              
+              <FormInput
+                label="Full Name"
+                name="fullname"
+                type="text"
+                placeholder="Your full name"
+                value={values.fullname}
+                error={errors.fullname}
+                touched={touched.fullname}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="name"
+                required
+              />
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="your@email.com"
-                />
-              </div>
+              <FormInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="your@email.com"
+                value={values.email}
+                error={errors.email}
+                touched={touched.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="email"
+                required
+              />
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="••••••••"
-                />
-              </div>
+              <FormInput
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={values.password}
+                error={errors.password}
+                touched={touched.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="new-password"
+                required
+              />
 
-              <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirm-password"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="••••••••"
-                />
-              </div>
+              <FormInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={values.confirmPassword}
+                error={errors.confirmPassword}
+                touched={touched.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="new-password"
+                required
+              />
 
-              <div>
-                <button
-                  type="submit"
-                  className="btn-hover-effect w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white font-medium bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400"
-                >
-                  Sign Up
-                </button>
-              </div>
+              <SubmitButton isSubmitting={isSubmitting}>
+                Create Account
+              </SubmitButton>
             </form>
 
             <div className="mt-6 text-center">
