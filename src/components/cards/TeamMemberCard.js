@@ -2,7 +2,7 @@
 import React from 'react';
 import './Cards.css';
 
-const TeamMemberCard = ({ name, role, description, color, image }) => {
+const TeamMemberCard = ({ name, role, description, color, image, portfolioUrl }) => {
   const colorClasses = {
     green: 'bg-green-200 text-green-500',
     blue: 'bg-blue-200 text-blue-500',
@@ -28,9 +28,20 @@ const TeamMemberCard = ({ name, role, description, color, image }) => {
         <h3 className="text-xl font-semibold mb-1 text-gray-800">{name}</h3>
         <p className={`${colorClasses[color].split(' ')[1]} font-medium mb-3`}>{role}</p>
         <p className="text-gray-600 mb-4">{description}</p>
-        <a href="#" className={`${colorClasses[color].split(' ')[1]} font-medium hover:underline`}>
-          View Portfolio
-        </a>
+        {portfolioUrl ? (
+          <a 
+            href={portfolioUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={`${colorClasses[color].split(' ')[1]} font-medium hover:underline`}
+          >
+            View Portfolio
+          </a>
+        ) : (
+          <span className="text-gray-400 font-medium">
+            Portfolio Coming Soon
+          </span>
+        )}
       </div>
     </div>
   );

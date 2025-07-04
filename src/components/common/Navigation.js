@@ -69,24 +69,6 @@ const Navigation = () => {
           >
             Login/Sign Up
           </Link>
-          <Link 
-            to="/superadmin" 
-            className="nav-button px-3 py-2 text-red-500 font-medium hover:text-red-600"
-          >
-            🛡️ Superadmin
-          </Link>
-          <Link 
-            to="/admin" 
-            className="nav-button px-3 py-2 text-blue-500 font-medium hover:text-blue-600"
-          >
-            🛡️ Admin
-          </Link>
-          <Link 
-            to="/viewer1" 
-            className="nav-button px-3 py-2 text-green-500 font-medium hover:text-green-600"
-          >
-            My Dashboard
-          </Link>
         </div>
       </div>
     </nav>

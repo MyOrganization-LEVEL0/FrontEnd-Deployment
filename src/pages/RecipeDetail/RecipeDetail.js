@@ -1,3 +1,4 @@
+// src/pages/RecipeDetail/RecipeDetail.js
 import React, { useState, useEffect } from 'react';
 import './RecipeDetail.css';
 
@@ -7,15 +8,19 @@ const RecipeDetailPage = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [checkedIngredients, setCheckedIngredients] = useState([]);
 
   // Mock recipe data - replace with API call based on route params
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
-      setRecipe({
+      const recipeData = {
         id: 1,
         title: 'Classic Leche Flan',
         image: '/imgs/leche-flan.jpg',
+        prep_time: '30 minutes',
+        cook_time: '50 minutes',
+        servings: '8 servings',
         ingredients: [
           '1 cup granulated sugar (for caramel)',
           '1/4 cup water',
@@ -33,7 +38,12 @@ const RecipeDetailPage = () => {
           'Let flan cool completely, then refrigerate for at least 4 hours or overnight.',
           'To unmold, run a knife around the edges and quickly invert onto serving plate.'
         ]
-      });
+      };
+      
+      setRecipe(recipeData);
+      
+      // Initialize ingredient checkboxes AFTER recipe is set
+      setCheckedIngredients(new Array(recipeData.ingredients.length).fill(false));
 
       setComments([
         {
@@ -70,62 +80,58 @@ const RecipeDetailPage = () => {
     window.print();
   };
 
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
+  const handleCommentSubmit = () => {
     if (newComment.trim()) {
       const comment = {
-        id: Date.now(),
-        user: 'You',
+        id: comments.length + 1,
+        user: 'Current User',
         date: new Date().toLocaleDateString(),
         comment: newComment
       };
-      setComments([comment, ...comments]);
+      setComments([...comments, comment]);
       setNewComment('');
-      alert('Comment added successfully!');
     }
+  };
+
+  const handleIngredientCheck = (index) => {
+    const newChecked = [...checkedIngredients];
+    newChecked[index] = !newChecked[index];
+    setCheckedIngredients(newChecked);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading recipe...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
       </div>
     );
   }
 
   if (!recipe) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="text-6xl mb-4">🍰</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Recipe not found</h2>
-          <p className="text-gray-600 mb-4">The recipe you're looking for doesn't exist.</p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition"
-          >
-            Go Back
-          </button>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Recipe Not Found</h2>
+          <p className="text-gray-600">The recipe you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="recipe-detail-container bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
         {/* Recipe Header */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+        <div className="bg-white rounded-lg shadow-sm mb-8 overflow-hidden">
           <div className="relative">
-            <img
-              src={recipe.image}
+            <img 
+              src={recipe.image} 
               alt={recipe.title}
-              className="w-full h-96 object-cover"
+              className="w-full h-64 md:h-80 object-cover"
             />
-            <div className="absolute top-4 right-4 flex gap-2">
+            
+            {/* Action Buttons - Hidden in print */}
+            <div className="absolute top-4 right-4 flex gap-2 no-print">
               <button
                 onClick={handleFavorite}
                 className={`p-3 rounded-full shadow-lg transition ${
@@ -151,48 +157,83 @@ const RecipeDetailPage = () => {
           </div>
           
           <div className="p-6">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{recipe.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 print-title">
+              {recipe.title}
+            </h1>
+            
+            {/* Recipe Meta Info - Print friendly */}
+            <div className="print-meta mb-6 text-sm text-gray-600">
+              <p>Prep Time: {recipe.prep_time} | Cook Time: {recipe.cook_time} | Servings: {recipe.servings}</p>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Ingredients */}
+          {/* Ingredients - Print optimized */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
-              <ul className="space-y-3">
+            <div className="bg-white rounded-lg shadow-sm p-6 print-ingredients">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 print-section-title">
+                Ingredients
+              </h2>
+              <ul className="space-y-3 print-ingredients-list">
                 {recipe.ingredients.map((ingredient, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-pink-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span className="text-gray-700">{ingredient}</span>
+                    {/* Checkbox for interactive use - hidden in print */}
+                    <div className="no-print mr-3 mt-1">
+                      <input
+                        type="checkbox"
+                        id={`ingredient-${index}`}
+                        checked={checkedIngredients[index]}
+                        onChange={() => handleIngredientCheck(index)}
+                        className="w-4 h-4 text-pink-600 bg-gray-100 border-gray-300 rounded focus:ring-pink-500 focus:ring-2"
+                      />
+                    </div>
+                    
+                    {/* Print bullet point - only shown in print */}
+                    <span className="print-only inline-block w-2 h-2 bg-pink-500 rounded-full mt-2 mr-3 flex-shrink-0 print-bullet"></span>
+                    
+                    <label 
+                      htmlFor={`ingredient-${index}`}
+                      className={`text-gray-700 print-ingredient-text cursor-pointer select-none transition-all ${
+                        checkedIngredients[index] 
+                          ? 'line-through text-gray-400' 
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {ingredient}
+                    </label>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          {/* Instructions */}
+          {/* Instructions - Print optimized */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Instructions</h2>
-              <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8 print-instructions">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 print-section-title">
+                Instructions
+              </h2>
+              <div className="space-y-6 print-instructions-list">
                 {recipe.instructions.map((instruction, index) => (
-                  <div key={index} className="flex gap-4">
+                  <div key={index} className="flex gap-4 print-instruction-item">
                     <div className="flex-shrink-0">
-                      <span className="flex items-center justify-center w-8 h-8 bg-pink-500 text-white rounded-full font-bold text-sm">
+                      <span className="flex items-center justify-center w-8 h-8 bg-pink-500 text-white rounded-full font-bold text-sm print-step-number">
                         {index + 1}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed">{instruction}</p>
+                      <p className="text-gray-700 leading-relaxed print-instruction-text">
+                        {instruction}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Comments Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* Comments Section - Hidden in print */}
+            <div className="bg-white rounded-lg shadow-sm p-6 no-print">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments</h2>
               
               {/* Add Comment Form */}
@@ -217,7 +258,9 @@ const RecipeDetailPage = () => {
               {/* Comments List */}
               <div className="space-y-6">
                 {comments.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No comments yet. Be the first to share your thoughts!</p>
+                  <p className="text-gray-500 text-center py-8">
+                    No comments yet. Be the first to share your thoughts!
+                  </p>
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="border-b border-gray-200 pb-6 last:border-b-0">
@@ -242,32 +285,191 @@ const RecipeDetailPage = () => {
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Enhanced Print Styles */}
       <style jsx>{`
         @media print {
-          .no-print {
+          /* Print bullet point - only visible in print */
+          .print-only {
             display: none !important;
           }
           
+          /* Show print elements only when printing */
+          @media print {
+            .print-only {
+              display: inline-block !important;
+            }
+          }
+          
+          /* Hide everything except recipe content */
+          body * {
+            visibility: hidden;
+          }
+          
+          /* Show only recipe content */
+          .recipe-detail-container,
+          .recipe-detail-container * {
+            visibility: visible;
+          }
+          
+          /* Hide specific non-recipe elements */
+          .no-print,
+          .no-print * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          
+          /* Reset print layout */
           body {
             background: white !important;
+            font-size: 12pt;
+            line-height: 1.4;
+            color: black !important;
           }
           
-          .bg-gray-50 {
+          .recipe-detail-container {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          .container {
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          /* Recipe title */
+          .print-title {
+            font-size: 24pt !important;
+            font-weight: bold !important;
+            margin-bottom: 16pt !important;
+            color: black !important;
+            text-align: center !important;
+          }
+          
+          /* Recipe meta info */
+          .print-meta {
+            text-align: center !important;
+            margin-bottom: 20pt !important;
+            font-size: 10pt !important;
+            color: #666 !important;
+          }
+          
+          /* Section titles */
+          .print-section-title {
+            font-size: 16pt !important;
+            font-weight: bold !important;
+            margin-bottom: 12pt !important;
+            color: black !important;
+            border-bottom: 1pt solid #ccc !important;
+            padding-bottom: 4pt !important;
+          }
+          
+          /* Ingredients section */
+          .print-ingredients {
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin-bottom: 20pt !important;
+            page-break-inside: avoid;
+          }
+          
+          .print-ingredients-list {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
+          .print-ingredient-text {
+            font-size: 10pt !important;
+            color: black !important;
+            line-height: 1.4 !important;
+            text-decoration: none !important;
+          }
+          
+          .print-bullet {
+            background: black !important;
+            width: 4pt !important;
+            height: 4pt !important;
+          }
+          
+          /* Instructions section */
+          .print-instructions {
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin-bottom: 20pt !important;
+          }
+          
+          .print-instructions-list {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
+          .print-instruction-item {
+            margin-bottom: 12pt !important;
+            page-break-inside: avoid;
+          }
+          
+          .print-step-number {
+            background: black !important;
+            color: white !important;
+            width: 20pt !important;
+            height: 20pt !important;
+            font-size: 10pt !important;
+            font-weight: bold !important;
+          }
+          
+          .print-instruction-text {
+            font-size: 10pt !important;
+            color: black !important;
+            line-height: 1.4 !important;
+          }
+          
+          /* Remove all shadows, borders, and colors */
+          .shadow-sm,
+          .shadow-md,
+          .shadow-lg,
+          .rounded-lg,
+          .bg-white,
+          .bg-gray-50,
+          .bg-pink-500 {
+            box-shadow: none !important;
+            border-radius: 0 !important;
             background: white !important;
           }
           
-          .shadow-sm {
-            box-shadow: none !important;
+          /* Remove grid layout for better print flow */
+          .grid,
+          .lg\\:grid-cols-3,
+          .lg\\:col-span-1,
+          .lg\\:col-span-2 {
+            display: block !important;
+            grid-template-columns: none !important;
+            column-span: none !important;
           }
           
-          .rounded-lg {
-            border-radius: 0 !important;
+          /* Ensure proper page breaks */
+          .print-ingredients {
+            page-break-after: avoid;
           }
           
-          .sticky {
-            position: static !important;
+          .print-instructions {
+            page-break-before: avoid;
           }
+          
+          /* Hide recipe image in print to save space */
+          img {
+            display: none !important;
+          }
+          
+          /* If you want to keep the image, uncomment this instead:
+          img {
+            max-width: 100% !important;
+            height: auto !important;
+            margin: 0 auto 20pt auto !important;
+            display: block !important;
+          }
+          */
         }
       `}</style>
     </div>

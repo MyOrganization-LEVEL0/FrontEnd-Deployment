@@ -10,7 +10,6 @@ import Recipes from './pages/Recipes/Recipes';
 import RecipeDetail from './pages/RecipeDetail/RecipeDetail';
 import Login from './pages/Login/Login';
 import SignUp from './pages/SignUp/SignUp';
-import Dashboard from './pages/Dashboard/Dashboard';
 import SearchResults from './pages/SearchResults/SearchResults';
 import SuperadminDashboard from './pages/SuperadminDashboard/SuperadminDashboard';
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
@@ -54,7 +53,6 @@ function App() {
                   <Route path="/recipe/:id" element={<RecipeDetail />} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/about" element={<About />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/superadmin" element={<SuperadminDashboard />} />
                   <Route path="/admin" element={<AdminDashboard />} />
