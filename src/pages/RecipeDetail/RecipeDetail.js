@@ -20,7 +20,6 @@ const RecipeDetailPage = () => {
         image: '/imgs/leche-flan.jpg',
         prep_time: '30 minutes',
         cook_time: '50 minutes',
-        servings: '8 servings',
         ingredients: [
           '1 cup granulated sugar (for caramel)',
           '1/4 cup water',
@@ -163,7 +162,7 @@ const RecipeDetailPage = () => {
             
             {/* Recipe Meta Info - Print friendly */}
             <div className="print-meta mb-6 text-sm text-gray-600">
-              <p>Prep Time: {recipe.prep_time} | Cook Time: {recipe.cook_time} | Servings: {recipe.servings}</p>
+              <p>Prep Time: {recipe.prep_time} | Cook Time: {recipe.cook_time}</p>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ export const teamMembers = [
     description: 'A dedicated Full-stack developer and Cyber Security Major that ensures quality and speed above all else.',
     color: 'green',
     image: 'imgs/Angeles.png',
-    portfolioUrl: null
+    portfolioUrl: 'https://angelesportfolio.netlify.app'
   },
   {
     name: 'Jerico Armendi',

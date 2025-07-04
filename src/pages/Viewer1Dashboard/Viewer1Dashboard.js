@@ -1,6 +1,7 @@
 // src/pages/Viewer1Dashboard/Viewer1Dashboard.js
 import React, { useState, useEffect } from 'react';
 import './Viewer1Dashboard.css';
+import EnhancedRecipeForm from './EnhancedRecipeForm';
 
 const Viewer1Dashboard = () => {
   const [activeTab, setActiveTab] = useState('recipes');
@@ -8,21 +9,6 @@ const Viewer1Dashboard = () => {
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
-  const [uploadingRecipe, setUploadingRecipe] = useState(false);
-
-  // Recipe form state - matches RecipeDetail.js structure
-  const [recipeForm, setRecipeForm] = useState({
-    title: '',
-    description: '',
-    ingredients: [''],
-    instructions: [''],
-    category: '',
-    difficulty: 'easy',
-    prep_time: '',
-    cook_time: '',
-    servings: '',
-    image: null,
-  });
 
   // Mock user data
   const user = {
@@ -38,18 +24,6 @@ const Viewer1Dashboard = () => {
       favorites: savedRecipes.length
     }
   };
-
-  // Categories that match RecipeDetail.js and SearchResults.js
-  const categories = [
-    { value: 'kakanin', label: 'Kakanin' },
-    { value: 'leche-flan', label: 'Leche Flan' },
-    { value: 'ube-desserts', label: 'Ube Desserts' },
-    { value: 'coconut-desserts', label: 'Coconut Desserts' },
-    { value: 'rice-desserts', label: 'Rice Desserts' },
-    { value: 'bibingka', label: 'Bibingka' },
-    { value: 'traditional-sweets', label: 'Traditional Sweets' },
-    { value: 'frozen-treats', label: 'Frozen Treats' },
-  ];
 
   // Mock data initialization
   useEffect(() => {
@@ -169,122 +143,6 @@ const Viewer1Dashboard = () => {
     ]);
   }, []);
 
-  // Recipe form handlers
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setRecipeForm(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleArrayChange = (index, value, field) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item),
-    }));
-  };
-
-  const addArrayItem = (field) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      [field]: [...prev[field], ''],
-    }));
-  };
-
-  const removeArrayItem = (index, field) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setRecipeForm(prev => ({
-        ...prev,
-        image: file,
-      }));
-    }
-  };
-
-  const resetForm = () => {
-    setRecipeForm({
-      title: '',
-      description: '',
-      ingredients: [''],
-      instructions: [''],
-      category: '',
-      difficulty: 'easy',
-      prep_time: '',
-      cook_time: '',
-      servings: '',
-      image: null,
-    });
-  };
-
-  const handleRecipeSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (!recipeForm.title.trim()) {
-      alert('Please enter a recipe title');
-      return;
-    }
-
-    if (recipeForm.ingredients.filter(ing => ing.trim()).length === 0) {
-      alert('Please add at least one ingredient');
-      return;
-    }
-
-    if (recipeForm.instructions.filter(inst => inst.trim()).length === 0) {
-      alert('Please add at least one instruction');
-      return;
-    }
-
-    setUploadingRecipe(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create new recipe object - matches RecipeDetail.js structure
-      const newRecipe = {
-        id: recipes.length + 1,
-        title: recipeForm.title,
-        description: recipeForm.description,
-        ingredients: recipeForm.ingredients.filter(ing => ing.trim()),
-        instructions: recipeForm.instructions.filter(inst => inst.trim()),
-        category: recipeForm.category,
-        difficulty: recipeForm.difficulty,
-        prep_time: recipeForm.prep_time ? `${recipeForm.prep_time} minutes` : '',
-        cook_time: recipeForm.cook_time ? `${recipeForm.cook_time} minutes` : '',
-        servings: recipeForm.servings ? `${recipeForm.servings} servings` : '',
-        status: 'pending',
-        views: 0,
-        rating: 0,
-        createdAt: new Date().toISOString().split('T')[0],
-        image: recipeForm.image ? URL.createObjectURL(recipeForm.image) : '/imgs/default-recipe.jpg'
-      };
-
-      // Add to recipes list
-      setRecipes(prev => [newRecipe, ...prev]);
-      
-      // Close modal and reset form
-      setShowAddRecipeModal(false);
-      resetForm();
-      
-      // Show success message
-      alert('Recipe submitted successfully! It will be reviewed and published soon.');
-      
-    } catch (error) {
-      alert('Failed to submit recipe. Please try again.');
-    } finally {
-      setUploadingRecipe(false);
-    }
-  };
-
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
       alert('Logging out...');
@@ -308,7 +166,6 @@ const Viewer1Dashboard = () => {
 
   const closeAddRecipeModal = () => {
     setShowAddRecipeModal(false);
-    resetForm();
   };
 
   return (
@@ -588,234 +445,14 @@ const Viewer1Dashboard = () => {
 
       {/* Add Recipe Modal */}
       {showAddRecipeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Add New Recipe</h2>
-                <button
-                  onClick={closeAddRecipeModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <form onSubmit={handleRecipeSubmit} className="space-y-6">
-                {/* Title */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recipe Title *
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={recipeForm.title}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    placeholder="Enter recipe title"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={recipeForm.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    placeholder="Brief description of your recipe"
-                  />
-                </div>
-
-                {/* Recipe Details - matches RecipeDetail.js structure */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      name="category"
-                      value={recipeForm.category}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    >
-                      <option value="">Select category</option>
-                      {categories.map(cat => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Difficulty
-                    </label>
-                    <select
-                      name="difficulty"
-                      value={recipeForm.difficulty}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    >
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Prep Time (min)
-                    </label>
-                    <input
-                      type="number"
-                      name="prep_time"
-                      value={recipeForm.prep_time}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      placeholder="30"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cook Time (min)
-                    </label>
-                    <input
-                      type="number"
-                      name="cook_time"
-                      value={recipeForm.cook_time}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      placeholder="45"
-                    />
-                  </div>
-                </div>
-
-                {/* Servings - matches RecipeDetail.js */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Servings
-                  </label>
-                  <input
-                    type="number"
-                    name="servings"
-                    value={recipeForm.servings}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    placeholder="8"
-                  />
-                </div>
-
-                {/* Ingredients */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ingredients *
-                  </label>
-                  {recipeForm.ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        type="text"
-                        value={ingredient}
-                        onChange={(e) => handleArrayChange(index, e.target.value, 'ingredients')}
-                        placeholder={`Ingredient ${index + 1}`}
-                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      />
-                      {recipeForm.ingredients.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeArrayItem(index, 'ingredients')}
-                          className="ml-2 text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('ingredients')}
-                    className="text-pink-600 hover:text-pink-800 text-sm font-medium"
-                  >
-                    + Add Ingredient
-                  </button>
-                </div>
-
-                {/* Instructions */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instructions *
-                  </label>
-                  {recipeForm.instructions.map((instruction, index) => (
-                    <div key={index} className="flex items-start mb-2">
-                      <textarea
-                        value={instruction}
-                        onChange={(e) => handleArrayChange(index, e.target.value, 'instructions')}
-                        placeholder={`Step ${index + 1}`}
-                        rows={2}
-                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      />
-                      {recipeForm.instructions.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeArrayItem(index, 'instructions')}
-                          className="ml-2 text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('instructions')}
-                    className="text-pink-600 hover:text-pink-800 text-sm font-medium"
-                  >
-                    + Add Step
-                  </button>
-                </div>
-
-                {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recipe Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="flex justify-end space-x-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeAddRecipeModal}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={uploadingRecipe}
-                    className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50"
-                  >
-                    {uploadingRecipe ? 'Submitting...' : 'Submit Recipe'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <EnhancedRecipeForm
+          onSubmit={(newRecipe) => {
+            setRecipes(prev => [newRecipe, ...prev]);
+            setShowAddRecipeModal(false);
+            alert('Recipe created successfully!');
+          }}
+          onCancel={() => setShowAddRecipeModal(false)}
+        />
       )}
 
       {/* Loading Overlay */}
