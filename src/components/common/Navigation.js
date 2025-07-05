@@ -1,10 +1,13 @@
 // src/components/common/Navigation.js
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Navigation.css';
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
   
   // Helper function to check if link is active
   const isActive = (path) => {
@@ -12,6 +15,15 @@ const Navigation = () => {
       return location.pathname === '/';
     }
     return location.pathname.startsWith(path);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -63,12 +75,49 @@ const Navigation = () => {
           >
             About Us
           </Link>
-          <Link 
-            to="/login" 
-            className="nav-button px-4 py-2 bg-purple-200 text-purple-600 rounded-full font-medium hover:bg-purple-300 transition"
-          >
-            Login/Sign Up
-          </Link>
+          
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-2">
+              {user?.role === 'superadmin' && (
+                <Link 
+                  to="/superadmin" 
+                  className="nav-button px-3 py-2 bg-red-200 text-red-600 rounded-full font-medium hover:bg-red-300 transition"
+                >
+                  Super Admin
+                </Link>
+              )}
+              {user?.role === 'admin' && (
+                <Link 
+                  to="/admin" 
+                  className="nav-button px-3 py-2 bg-orange-200 text-orange-600 rounded-full font-medium hover:bg-orange-300 transition"
+                >
+                  Admin
+                </Link>
+              )}
+              {(user?.role === 'viewer1' || !user?.role) && (
+                <Link 
+                  to="/viewer1" 
+                  className="nav-button px-3 py-2 bg-blue-200 text-blue-600 rounded-full font-medium hover:bg-blue-300 transition"
+                >
+                  Dashboard
+                </Link>
+              )}
+              <span className="text-sm text-gray-600">Welcome, {user?.full_name || user?.email}</span>
+              <button 
+                onClick={handleLogout}
+                className="nav-button px-4 py-2 bg-gray-200 text-gray-600 rounded-full font-medium hover:bg-gray-300 transition"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link 
+              to="/login" 
+              className="nav-button px-4 py-2 bg-purple-200 text-purple-600 rounded-full font-medium hover:bg-purple-300 transition"
+            >
+              Login/Sign Up
+            </Link>
+          )}
         </div>
       </div>
     </nav>

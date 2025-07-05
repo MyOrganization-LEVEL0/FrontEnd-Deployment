@@ -1,6 +1,7 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import Navigation from './components/common/Navigation';
 import Footer from './components/common/Footer';
 import Landing from './pages/Landing/Landing';
@@ -15,56 +16,71 @@ import SuperadminDashboard from './pages/SuperadminDashboard/SuperadminDashboard
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import Viewer1Dashboard from './pages/Viewer1Dashboard/Viewer1Dashboard';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ProtectedRoute from './auth/ProtectedRoute'
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen flex flex-col">
-        <Routes>
-          <Route path="/login" element={
-            <>
-              <Navigation />
-              <Login />
-              <Footer />
-            </>
-          } />
-          <Route path="/signup" element={
-            <>
-              <Navigation />
-              <SignUp />
-              <Footer />
-            </>
-          } />
-          <Route path="/forgot-password" element={
-            <>
-              <Navigation />
-              <ForgotPassword />
-              <Footer />
-            </>
-          } />
-          <Route path="*" element={
-            <>
-              <Navigation />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/recipes" element={<Recipes />} />
-                  <Route path="/recipe/:id" element={<RecipeDetail />} />
-                  <Route path="/categories" element={<Categories />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/search" element={<SearchResults />} />
-                  <Route path="/superadmin" element={<SuperadminDashboard />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/viewer1" element={<Viewer1Dashboard />} />
-                </Routes>
-              </main>
-              <Footer />
-            </>
-          } />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen flex flex-col">
+          <Routes>
+            <Route path="/login" element={
+              <>
+                <Navigation />
+                <Login />
+                <Footer />
+              </>
+            } />
+            <Route path="/signup" element={
+              <>
+                <Navigation />
+                <SignUp />
+                <Footer />
+              </>
+            } />
+            <Route path="/forgot-password" element={
+              <>
+                <Navigation />
+                <ForgotPassword />
+                <Footer />
+              </>
+            } />
+            <Route path="*" element={
+              <>
+                <Navigation />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/recipes" element={<Recipes />} />
+                    <Route path="/recipe/:id" element={<RecipeDetail />} />
+                    <Route path="/categories" element={<Categories />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/search" element={<SearchResults />} />
+                    <Route path="/superadmin" element={
+                      <ProtectedRoute requiredRole="superadmin">
+                        <SuperadminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin" element={
+                      <ProtectedRoute requiredRole="admin">
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/viewer1" element={
+                      <ProtectedRoute>
+                        <Viewer1Dashboard />
+                      </ProtectedRoute>
+                    } />
+                  </Routes>
+                </main>
+                <Footer />
+              </>
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

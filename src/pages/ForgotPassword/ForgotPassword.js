@@ -1,6 +1,7 @@
 // src/pages/ForgotPassword/ForgotPassword.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { authService } from '../../services/authService';
 import useFormValidation from '../../hooks/useFormValidation';
 import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
 
@@ -32,13 +33,11 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await authService.forgotPassword(values.email);
       setSubmitMessage('success', 'Password reset instructions have been sent to your email!');
       
     } catch (error) {
-      setSubmitMessage('error', 'Something went wrong. Please try again.');
+      setSubmitMessage('error', error.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

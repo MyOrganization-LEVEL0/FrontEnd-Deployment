@@ -1,12 +1,14 @@
 // src/pages/SignUp/SignUp.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import useFormValidation from '../../hooks/useFormValidation';
 import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
 import './SignUp.css';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   
   const {
     values,
@@ -33,28 +35,24 @@ const SignUp = () => {
     e.preventDefault();
     
     if (!validateAll()) {
-      setSubmitMessage('error', 'Please complete all required fields to create your account. ');
+      setSubmitMessage('error', 'Please complete all required fields to create your account.');
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Replace this with your actual API call
-      console.log('SignUp data:', { 
-        fullname: values.fullname, 
-        email: values.email, 
-        password: values.password 
+      await signup({
+        full_name: values.fullname,
+        email: values.email,
+        password: values.password
       });
       
-      setSubmitMessage('success', 'Account created successfully! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2000);
+      setSubmitMessage('success', 'Account created successfully! Welcome to BASTA Desserts.');
+      setTimeout(() => navigate('/'), 2000);
       
     } catch (error) {
-      setSubmitMessage('error', 'Sign up failed. Please try again.');
+      setSubmitMessage('error', error.response?.data?.message || 'Sign up failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -67,8 +65,8 @@ const SignUp = () => {
           <div className="pastel-gradient h-3"></div>
           <div className="p-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
-              <p className="text-gray-600">Join us and start saving your favorite recipes</p>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Join BASTA Desserts</h2>
+              <p className="text-gray-600">Create your account to start sharing recipes</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -78,7 +76,7 @@ const SignUp = () => {
                 label="Full Name"
                 name="fullname"
                 type="text"
-                placeholder="Your full name"
+                placeholder="John Doe"
                 value={values.fullname}
                 error={errors.fullname}
                 touched={touched.fullname}

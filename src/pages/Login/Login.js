@@ -1,12 +1,14 @@
 // src/pages/Login/Login.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import useFormValidation from '../../hooks/useFormValidation';
 import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   
   const {
     values,
@@ -35,17 +37,16 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Replace this with your actual API call
-      console.log('Login data:', { email: values.email, password: values.password });
+      await login({
+        email: values.email,
+        password: values.password
+      });
       
       setSubmitMessage('success', 'Login successful! Welcome to BASTA Desserts.');
       setTimeout(() => navigate('/'), 2000);
       
     } catch (error) {
-      setSubmitMessage('error', 'Login failed. Please check your credentials.');
+      setSubmitMessage('error', error.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsSubmitting(false);
     }
