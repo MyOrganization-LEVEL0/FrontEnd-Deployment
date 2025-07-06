@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { recipeService } from '../../services/recipeService'; // Add this line
+import React, { useState, useEffect } from 'react';
+import { recipeService } from '../../services/recipeService';
 
-
-function EnhancedRecipeForm({ onSubmit, onCancel }) {
+function EnhancedRecipeForm({ recipe = null, isEditing = false, onSubmit, onCancel }) {
   const [imageName, setImageName] = useState('');
   const [ingredientInput, setIngredientInput] = useState('');
   const [ingredients, setIngredients] = useState([]);
@@ -16,6 +15,7 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
     category: '',
     prep_time: '',
     cook_time: '',
+    servings: '',
     image: null
   });
 
@@ -30,6 +30,73 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
     { value: 'traditional-sweets', label: 'Traditional Sweets' },
     { value: 'frozen-treats', label: 'Frozen Treats' },
   ];
+
+  // Initialize form with existing recipe data when editing
+  useEffect(() => {
+    if (isEditing && recipe) {
+      setFormData({
+        title: recipe.title || '',
+        description: recipe.description || '',
+        category: recipe.category || '',
+        prep_time: recipe.prep_time || '',
+        cook_time: recipe.cook_time || '',
+        servings: recipe.servings || '',
+        image: null // Keep existing image unless user uploads new one
+      });
+
+      // Set ingredients with proper format
+      if (recipe.ingredients) {
+        let ingredientsToProcess = recipe.ingredients;
+        
+        // Handle if ingredients is a string (JSON)
+        if (typeof recipe.ingredients === 'string') {
+          try {
+            ingredientsToProcess = JSON.parse(recipe.ingredients);
+          } catch (e) {
+            ingredientsToProcess = [recipe.ingredients];
+          }
+        }
+        
+        if (Array.isArray(ingredientsToProcess)) {
+          const formattedIngredients = ingredientsToProcess.map((ingredient) => ({
+            name: typeof ingredient === 'string' ? ingredient : ingredient.name || ingredient,
+            checked: true
+          }));
+          setIngredients(formattedIngredients);
+        } else {
+          setIngredients([]);
+        }
+      } else {
+        setIngredients([]);
+      }
+
+      // Set instructions with proper format
+      if (recipe.instructions) {
+        let instructionsToProcess = recipe.instructions;
+        
+        // Handle if instructions is a string (JSON)
+        if (typeof recipe.instructions === 'string') {
+          try {
+            instructionsToProcess = JSON.parse(recipe.instructions);
+          } catch (e) {
+            instructionsToProcess = [recipe.instructions];
+          }
+        }
+        
+        if (Array.isArray(instructionsToProcess)) {
+          const formattedInstructions = instructionsToProcess.map((instruction) => ({
+            text: typeof instruction === 'string' ? instruction : instruction.text || instruction,
+            checked: true
+          }));
+          setInstructions(formattedInstructions);
+        } else {
+          setInstructions([]);
+        }
+      } else {
+        setInstructions([]);
+      }
+    }
+  }, [isEditing, recipe]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -112,75 +179,87 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
       alert('Please enter a recipe title');
       return;
     }
-
-    const selectedIngredients = ingredients.filter(i => i.checked).map(i => i.name);
-    const selectedInstructions = instructions.filter(i => i.checked).map(i => i.text);
-
-    if (selectedIngredients.length === 0) {
+    
+    if (ingredients.length === 0) {
       alert('Please add at least one ingredient');
       return;
     }
-
-    if (selectedInstructions.length === 0) {
+    
+    if (instructions.length === 0) {
       alert('Please add at least one instruction');
       return;
     }
 
-    if (!formData.category) {
-      alert('Please select a category');
-      return;
-    }
-
     setIsSubmitting(true);
-
+    
     try {
-      // Create FormData for file upload
-      const formDataToSend = new FormData();
+      // Prepare form data for submission
+      const submitData = new FormData();
       
-      // Add text fields
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('category', formData.category);
-      formDataToSend.append('prep_time', parseInt(formData.prep_time) || 0);
-      formDataToSend.append('cook_time', parseInt(formData.cook_time) || 0);
-      formDataToSend.append('servings', 4);
+      // Basic fields
+      submitData.append('title', formData.title);
+      submitData.append('description', formData.description);
+      submitData.append('category', formData.category);
+      submitData.append('prep_time', parseInt(formData.prep_time) || 0);
+      submitData.append('cook_time', parseInt(formData.cook_time) || 0);
+      submitData.append('servings', parseInt(formData.servings) || 1);
       
-      // Add ingredients and instructions as JSON strings
-      formDataToSend.append('ingredients', JSON.stringify(selectedIngredients));
-      formDataToSend.append('instructions', JSON.stringify(selectedInstructions));
+      // Ingredients and instructions as JSON
+      const ingredientsList = ingredients.map(ingredient => ingredient.name);
+      const instructionsList = instructions.map(instruction => instruction.text);
+      
+      submitData.append('ingredients', JSON.stringify(ingredientsList));
+      submitData.append('instructions', JSON.stringify(instructionsList));
+      
+      // Image (only if new image is selected)
+      if (formData.image) {
+        submitData.append('featured_image', formData.image);
+      }
 
-      // DEBUG: Check image details
-      console.log('formData.image:', formData.image);
-      console.log('Is File?:', formData.image instanceof File);
-      console.log('File size:', formData.image?.size);
-      console.log('File type:', formData.image?.type);
-      console.log('File name:', formData.image?.name);
-      
-      // Add image file if provided
-      if (formData.image && formData.image instanceof File) {
-        console.log('📸 Adding image with clean approach');
-        
-        // Just append the file directly without extra checks
-        formDataToSend.append('featured_image', formData.image, formData.image.name);
-        
-        console.log('Image added to FormData');
+      let response;
+      if (isEditing) {
+        // Update existing recipe
+        response = await recipeService.updateRecipe(recipe.id, submitData);
       } else {
-        console.log('No image selected');
+        // Create new recipe
+        response = await recipeService.createRecipe(submitData);
       }
       
-      // DEBUG: Log all FormData entries
-      console.log('FormData contents:');
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value);
-      }
-      // REAL API call to Django with FormData
-      const response = await recipeService.createRecipe(formDataToSend);
+      // Transform response for the parent component
+      const recipeData = response.recipe || response;
+      const transformedRecipe = {
+        id: recipeData.id,
+        title: recipeData.title,
+        description: recipeData.description,
+        ingredients: ingredientsList,
+        instructions: instructionsList,
+        category: recipeData.category,
+        prep_time: recipeData.prep_time,
+        cook_time: recipeData.cook_time,
+        servings: recipeData.servings,
+        status: recipeData.status || 'pending',
+        views: recipeData.views_count || 0,
+        rating: recipeData.average_rating || 0,
+        createdAt: new Date(recipeData.created_at || Date.now()).toLocaleDateString(),
+        image: recipeData.featured_image || 'https://via.placeholder.com/300x200?text=No+Image'
+      };
       
-      // Use Django's response
-      onSubmit(response.recipe);
+      onSubmit(transformedRecipe);
       
     } catch (error) {
-      alert('Failed to submit recipe. Please try again.');
+      console.error('Error submitting recipe:', error);
+      
+      if (error.response?.data?.details) {
+        // Handle validation errors from backend
+        const errorMessages = Object.entries(error.response.data.details)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('\n');
+        alert(`Please fix the following errors:\n\n${errorMessages}`);
+      } else if (error.response?.data?.error) {
+        alert(`Error: ${error.response.data.error}`);
+      } else {
+        alert('Failed to save recipe. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -192,7 +271,9 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
         <div className="p-6 md:p-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">Add New Recipe</h2>
+            <h2 className="text-3xl font-bold text-gray-800">
+              {isEditing ? `Edit Recipe: ${recipe?.title}` : 'Add New Recipe'}
+            </h2>
             <button
               onClick={onCancel}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -228,23 +309,37 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
                   rows="3"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
                   placeholder="Brief description of your recipe"
-                ></textarea>
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleFormChange}
-                  required
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
                 >
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Servings</label>
+                <input
+                  type="number"
+                  name="servings"
+                  value={formData.servings}
+                  onChange={handleFormChange}
+                  min="1"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  placeholder="Number of servings"
+                />
               </div>
 
               <div>
@@ -254,8 +349,9 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
                   name="prep_time"
                   value={formData.prep_time}
                   onChange={handleFormChange}
+                  min="0"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="e.g., 15"
+                  placeholder="Preparation time"
                 />
               </div>
 
@@ -266,8 +362,9 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
                   name="cook_time"
                   value={formData.cook_time}
                   onChange={handleFormChange}
+                  min="0"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="e.g., 30"
+                  placeholder="Cooking time"
                 />
               </div>
             </div>
@@ -297,10 +394,10 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
             {/* Ingredients List */}
             {ingredients.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selected Ingredients</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Ingredients</label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <input
                         type="checkbox"
                         checked={ingredient.checked}
@@ -376,7 +473,9 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
 
             {/* Image Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Image</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Recipe Image {isEditing && recipe?.image && '(Upload new image to replace current)'}
+              </label>
               <input
                 type="file"
                 accept="image/*"
@@ -385,6 +484,9 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
               />
               {imageName && (
                 <p className="mt-2 text-sm text-gray-600">Selected file: {imageName}</p>
+              )}
+              {isEditing && recipe?.image && !imageName && (
+                <p className="mt-2 text-sm text-gray-500">Current image will be kept if no new image is selected</p>
               )}
             </div>
 
@@ -403,7 +505,10 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
                 disabled={isSubmitting}
                 className="bg-purple-500 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-purple-600 transition transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {isSubmitting ? 'Creating Recipe...' : 'Create Recipe'}
+                {isSubmitting 
+                  ? (isEditing ? 'Updating Recipe...' : 'Creating Recipe...') 
+                  : (isEditing ? 'Update Recipe' : 'Create Recipe')
+                }
               </button>
             </div>
           </div>

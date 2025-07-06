@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { recipeService } from '../../services/recipeService';
 import './Viewer1Dashboard.css';
@@ -10,10 +10,11 @@ const Viewer1Dashboard = () => {
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
-
+  const [showEditRecipeModal, setShowEditRecipeModal] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
 
   // Get real user data from authentication context
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   
   // Use real user data
   const user = {
@@ -31,67 +32,132 @@ const Viewer1Dashboard = () => {
   };
 
   // Load real user data from API
-  useEffect(() => {
-    const loadUserRecipes = async () => {
-      if (!authUser?.id) return;
+  const loadUserRecipes = useCallback(async () => {
+    if (!authUser?.id) return;
+    
+    setLoading(true);
+    try {
+      // Get user's own recipes (both published and pending)
+      const response = await recipeService.getAllRecipes();
       
-      setLoading(true);
-      try {
-        // Get user's own recipes (both published and pending)
-        const response = await recipeService.getAllRecipes();
-
-        console.log('Auth User ID:', authUser.id);
-        console.log('Auth User:', authUser);
-        console.log('API Response:', response);
-        console.log('All recipes from API:', response.results);
-        
-        // Filter to only show current user's recipes
-        const userRecipes = response.results?.filter(recipe => 
-          recipe.author.id === authUser.id
-        ) || [];
-
-        console.log('Filtered user recipes:', userRecipes);
-
-        
-        // Transform API data to match existing component structure
-        const transformedRecipes = userRecipes.map(recipe => ({
-          id: recipe.id,
-          title: recipe.title,
-          description: recipe.description,
-          ingredients: recipe.ingredients || [],
-          instructions: recipe.instructions || [],
-          category: recipe.category,
-          prep_time: `${recipe.prep_time} minutes`,
-          cook_time: `${recipe.cook_time} minutes`,
-          servings: `${recipe.servings} servings`,
-          status: recipe.status,
-          views: recipe.views_count,
-          rating: recipe.average_rating || 0,
-          createdAt: new Date(recipe.created_at).toLocaleDateString(),
-          image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image'
-        }));
-        
-        setRecipes(transformedRecipes);
-        
-        // TODO: Load user's favorited recipes when favorites API is ready
-        setSavedRecipes([]);
-        
-      } catch (error) {
-        console.error('Error loading user recipes:', error);
-        setRecipes([]);
-        setSavedRecipes([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserRecipes();
+      // Filter to only show current user's recipes
+      const userRecipes = response.results?.filter(recipe => 
+        recipe.author.id === authUser.id
+      ) || [];
+      
+      // Transform API data to match existing component structure
+      const transformedRecipes = userRecipes.map(recipe => ({
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        ingredients: recipe.ingredients || [],
+        instructions: recipe.instructions || [],
+        category: recipe.category,
+        prep_time: recipe.prep_time,
+        cook_time: recipe.cook_time,
+        servings: recipe.servings,
+        status: recipe.status,
+        views: recipe.views_count,
+        rating: recipe.average_rating || 0,
+        createdAt: new Date(recipe.created_at).toLocaleDateString(),
+        image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image'
+      }));
+      
+      setRecipes(transformedRecipes);
+      
+      // TODO: Load user's favorited recipes when favorites API is ready
+      setSavedRecipes([]);
+      
+    } catch (error) {
+      console.error('Error loading user recipes:', error);
+      setRecipes([]);
+      setSavedRecipes([]);
+    } finally {
+      setLoading(false);
+    }
   }, [authUser?.id]);
+
+  useEffect(() => {
+    loadUserRecipes();
+  }, [loadUserRecipes]);
+
+  // Handle editing a recipe
+  const handleEditRecipe = async (recipe) => {
+    try {
+      setLoading(true);
+      
+      // Fetch the complete recipe details from the API
+      const fullRecipe = await recipeService.getRecipeById(recipe.id);
+      
+      setEditingRecipe(fullRecipe);
+      setShowEditRecipeModal(true);
+    } catch (error) {
+      console.error('Error fetching recipe details:', error);
+      alert('Failed to load recipe details for editing.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle deleting a recipe
+  const handleDeleteRecipe = async (recipeId, recipeTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${recipeTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await recipeService.deleteRecipe(recipeId);
+      
+      // Remove recipe from local state
+      setRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
+      
+      alert('Recipe deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      alert('Failed to delete recipe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle recipe update
+  const handleUpdateRecipe = async (updatedRecipeData) => {
+    if (!editingRecipe) return;
+
+    setLoading(true);
+    try {
+      const response = await recipeService.updateRecipe(editingRecipe.id, updatedRecipeData);
+      
+      // Update recipe in local state
+      setRecipes(prev => prev.map(recipe => 
+        recipe.id === editingRecipe.id 
+          ? {
+              ...recipe,
+              ...updatedRecipeData,
+              status: response.recipe?.status || 'pending' // Updated recipes may need re-approval
+            }
+          : recipe
+      ));
+      
+      setShowEditRecipeModal(false);
+      setEditingRecipe(null);
+      alert('Recipe updated successfully!');
+      
+      // Refresh data from server
+      loadUserRecipes();
+      
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+      alert('Failed to update recipe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
-      alert('Logging out...');
-      // Add logout logic here
+      logout();
     }
   };
 
@@ -107,10 +173,6 @@ const Viewer1Dashboard = () => {
 
   const openAddRecipeModal = () => {
     setShowAddRecipeModal(true);
-  };
-
-  const closeAddRecipeModal = () => {
-    setShowAddRecipeModal(false);
   };
 
   return (
@@ -214,14 +276,20 @@ const Viewer1Dashboard = () => {
                         <div className="flex gap-2">
                           <button 
                             onClick={() => window.location.href = `/recipe/${recipe.id}`}
-                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
                           >
                             View
                           </button>
-                          <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
+                          <button 
+                            onClick={() => handleEditRecipe(recipe)}
+                            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                          >
                             Edit
                           </button>
-                          <button className="px-3 py-1 text-sm text-red-600 hover:text-red-800">
+                          <button 
+                            onClick={() => handleDeleteRecipe(recipe.id, recipe.title)}
+                            className="px-3 py-1 text-sm text-red-600 hover:text-red-800 transition-colors"
+                          >
                             Delete
                           </button>
                         </div>
@@ -296,7 +364,7 @@ const Viewer1Dashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                     <input
                       type="text"
-                      value={user.username}
+                      value={user.username || ''}
                       disabled
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                     />
@@ -306,7 +374,7 @@ const Viewer1Dashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <input
                       type="email"
-                      value={user.email}
+                      value={user.email || ''}
                       disabled
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                     />
@@ -316,7 +384,7 @@ const Viewer1Dashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                     <input
                       type="text"
-                      value={user.firstName}
+                      value={user.firstName || ''}
                       disabled
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                     />
@@ -326,7 +394,7 @@ const Viewer1Dashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                     <input
                       type="text"
-                      value={user.lastName}
+                      value={user.lastName || ''}
                       disabled
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                     />
@@ -336,7 +404,7 @@ const Viewer1Dashboard = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Member Since</label>
                     <input
                       type="text"
-                      value={user.memberSince}
+                      value={user.memberSince || ''}
                       disabled
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                     />
@@ -397,11 +465,22 @@ const Viewer1Dashboard = () => {
             alert('Recipe created successfully!');
             
             // Refresh the recipe list to get updated data from server
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
+            loadUserRecipes();
           }}
           onCancel={() => setShowAddRecipeModal(false)}
+        />
+      )}
+
+      {/* Edit Recipe Modal */}
+      {showEditRecipeModal && editingRecipe && (
+        <EnhancedRecipeForm
+          recipe={editingRecipe}
+          isEditing={true}
+          onSubmit={handleUpdateRecipe}
+          onCancel={() => {
+            setShowEditRecipeModal(false);
+            setEditingRecipe(null);
+          }}
         />
       )}
 
