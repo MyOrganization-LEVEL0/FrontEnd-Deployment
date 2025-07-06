@@ -69,7 +69,9 @@ const SignUp = () => {
       }
       
       setSubmitMessage('error', errorMessage);
-    }
+    }finally {
+    setIsSubmitting(false);  // ← ADD THIS LINE!
+   }
   };
 
   return (
