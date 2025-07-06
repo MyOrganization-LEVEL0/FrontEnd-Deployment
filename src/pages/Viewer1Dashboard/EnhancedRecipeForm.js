@@ -148,12 +148,31 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
       // Add ingredients and instructions as JSON strings
       formDataToSend.append('ingredients', JSON.stringify(selectedIngredients));
       formDataToSend.append('instructions', JSON.stringify(selectedInstructions));
+
+      // DEBUG: Check image details
+      console.log('formData.image:', formData.image);
+      console.log('Is File?:', formData.image instanceof File);
+      console.log('File size:', formData.image?.size);
+      console.log('File type:', formData.image?.type);
+      console.log('File name:', formData.image?.name);
       
       // Add image file if provided
-      //if (formData.image && formData.image instanceof File) {
-        //formDataToSend.append('featured_image', formData.image);
-      //}
-
+      if (formData.image && formData.image instanceof File) {
+        console.log('📸 Adding image with clean approach');
+        
+        // Just append the file directly without extra checks
+        formDataToSend.append('featured_image', formData.image, formData.image.name);
+        
+        console.log('Image added to FormData');
+      } else {
+        console.log('No image selected');
+      }
+      
+      // DEBUG: Log all FormData entries
+      console.log('FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value);
+      }
       // REAL API call to Django with FormData
       const response = await recipeService.createRecipe(formDataToSend);
       

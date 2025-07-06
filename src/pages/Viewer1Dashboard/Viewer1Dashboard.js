@@ -1,5 +1,6 @@
-// src/pages/Viewer1Dashboard/Viewer1Dashboard.js
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { recipeService } from '../../services/recipeService';
 import './Viewer1Dashboard.css';
 import EnhancedRecipeForm from './EnhancedRecipeForm';
 
@@ -10,14 +11,18 @@ const Viewer1Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
 
-  // Mock user data
+
+  // Get real user data from authentication context
+  const { user: authUser } = useAuth();
+  
+  // Use real user data
   const user = {
-    id: 1,
-    username: 'john123456',
-    email: 'john123@gmail.com',
-    firstName: 'john michael',
-    lastName: 'villarosa',
-    memberSince: '6/28/2025',
+    id: authUser?.id,
+    username: authUser?.username,
+    email: authUser?.email,
+    firstName: authUser?.first_name || '',
+    lastName: authUser?.last_name || '',
+    memberSince: authUser?.date_joined ? new Date(authUser.date_joined).toLocaleDateString() : '',
     stats: {
       recipes: recipes.length,
       reviews: 0,
@@ -25,123 +30,63 @@ const Viewer1Dashboard = () => {
     }
   };
 
-  // Mock data initialization
+  // Load real user data from API
   useEffect(() => {
-    // User's recipes - matches your RecipeDetail.js structure exactly
-    setRecipes([
-      {
-        id: 1,
-        title: 'Classic Leche Flan',
-        description: 'A creamy and smooth Filipino custard dessert made with eggs and milk.',
-        ingredients: [
-          '1 cup granulated sugar (for caramel)',
-          '1/4 cup water',
-          '10 large egg yolks',
-          '1 can (14 oz) sweetened condensed milk',
-          '1 can (12 oz) evaporated milk',
-          '1 tsp vanilla extract (optional)'
-        ],
-        instructions: [
-          'In a saucepan, combine 1 cup sugar and 1/4 cup water. Cook over medium heat without stirring until sugar dissolves and turns golden amber (about 10 minutes).',
-          'Quickly pour the hot caramel into your llanera or baking dish, tilting to coat the bottom evenly. Set aside to cool and harden.',
-          'In a large bowl, gently whisk egg yolks. Add condensed milk, evaporated milk, and vanilla. Mix until smooth but avoid creating bubbles.'
-        ],
-        category: 'leche-flan',
-        difficulty: 'medium',
-        prep_time: '30 minutes',
-        cook_time: '50 minutes',
-        servings: '8 servings',
-        status: 'published',
-        views: 156,
-        rating: 4.5,
-        createdAt: '2024-12-20',
-        image: '/imgs/leche-flan.jpg'
-      },
-      {
-        id: 2,
-        title: 'Ube Halaya',
-        description: 'Traditional Filipino purple yam dessert that\'s creamy and delicious.',
-        ingredients: [
-          '2 lbs fresh ube (purple yam)',
-          '1 can (14 oz) sweetened condensed milk',
-          '1 can (12 oz) evaporated milk',
-          '1/2 cup sugar',
-          '1/4 cup butter'
-        ],
-        instructions: [
-          'Boil ube until tender, then peel and mash until smooth.',
-          'In a pan, combine mashed ube, condensed milk, evaporated milk, and sugar.',
-          'Cook over medium heat, stirring constantly until thick.'
-        ],
-        category: 'ube-desserts',
-        difficulty: 'easy',
-        prep_time: '45 minutes',
-        cook_time: '30 minutes',
-        servings: '6 servings',
-        status: 'pending',
-        views: 0,
-        rating: 0,
-        createdAt: '2024-12-25',
-        image: '/imgs/ube-halaya.jpg'
-      }
-    ]);
+    const loadUserRecipes = async () => {
+      if (!authUser?.id) return;
+      
+      setLoading(true);
+      try {
+        // Get user's own recipes (both published and pending)
+        const response = await recipeService.getAllRecipes();
 
-    // Saved recipes - matches your RecipeDetail.js structure
-    setSavedRecipes([
-      {
-        id: 3,
-        title: 'Bibingka',
-        description: 'Traditional Filipino rice cake cooked in clay pots.',
-        ingredients: [
-          '2 cups rice flour',
-          '1 cup coconut milk',
-          '2 eggs',
-          'Cheese for topping',
-          'Salted duck eggs'
-        ],
-        instructions: [
-          'Mix rice flour and coconut milk in a bowl.',
-          'Add eggs and mix well.',
-          'Cook in clay pot and top with cheese.'
-        ],
-        category: 'bibingka',
-        difficulty: 'medium',
-        prep_time: '20 minutes',
-        cook_time: '25 minutes',
-        servings: '4 servings',
-        author: 'Chef Maria',
-        rating: 4.8,
-        savedAt: '2024-12-15',
-        image: '/imgs/bibingka.jpg'
-      },
-      {
-        id: 4,
-        title: 'Halo-Halo',
-        description: 'Filipino shaved ice dessert with mixed ingredients.',
-        ingredients: [
-          '2 cups shaved ice',
-          '1/2 cup sweetened beans',
-          '1/2 cup ube halaya',
-          '1/4 cup leche flan',
-          'Ube ice cream'
-        ],
-        instructions: [
-          'Layer ingredients in tall glass.',
-          'Add shaved ice on top.',
-          'Top with ice cream and serve.'
-        ],
-        category: 'frozen-treats',
-        difficulty: 'easy',
-        prep_time: '15 minutes',
-        cook_time: '0 minutes',
-        servings: '2 servings',
-        author: 'Tita Rosa',
-        rating: 4.6,
-        savedAt: '2024-12-10',
-        image: '/imgs/halo-halo.jpg'
+        console.log('Auth User ID:', authUser.id);
+        console.log('Auth User:', authUser);
+        console.log('API Response:', response);
+        console.log('All recipes from API:', response.results);
+        
+        // Filter to only show current user's recipes
+        const userRecipes = response.results?.filter(recipe => 
+          recipe.author.id === authUser.id
+        ) || [];
+
+        console.log('Filtered user recipes:', userRecipes);
+
+        
+        // Transform API data to match existing component structure
+        const transformedRecipes = userRecipes.map(recipe => ({
+          id: recipe.id,
+          title: recipe.title,
+          description: recipe.description,
+          ingredients: recipe.ingredients || [],
+          instructions: recipe.instructions || [],
+          category: recipe.category,
+          prep_time: `${recipe.prep_time} minutes`,
+          cook_time: `${recipe.cook_time} minutes`,
+          servings: `${recipe.servings} servings`,
+          status: recipe.status,
+          views: recipe.views_count,
+          rating: recipe.average_rating || 0,
+          createdAt: new Date(recipe.created_at).toLocaleDateString(),
+          image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image'
+        }));
+        
+        setRecipes(transformedRecipes);
+        
+        // TODO: Load user's favorited recipes when favorites API is ready
+        setSavedRecipes([]);
+        
+      } catch (error) {
+        console.error('Error loading user recipes:', error);
+        setRecipes([]);
+        setSavedRecipes([]);
+      } finally {
+        setLoading(false);
       }
-    ]);
-  }, []);
+    };
+
+    loadUserRecipes();
+  }, [authUser?.id]);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
@@ -450,6 +395,11 @@ const Viewer1Dashboard = () => {
             setRecipes(prev => [newRecipe, ...prev]);
             setShowAddRecipeModal(false);
             alert('Recipe created successfully!');
+            
+            // Refresh the recipe list to get updated data from server
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
           }}
           onCancel={() => setShowAddRecipeModal(false)}
         />
