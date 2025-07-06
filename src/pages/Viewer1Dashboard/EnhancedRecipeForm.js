@@ -140,7 +140,6 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
         ingredients: selectedIngredients,
         instructions: selectedInstructions,
         category: formData.category,
-        difficulty: 'easy', // Default value
         prep_time: formData.prep_time ? `${formData.prep_time} minutes` : '',
         cook_time: formData.cook_time ? `${formData.cook_time} minutes` : '',
         status: 'pending',
