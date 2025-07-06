@@ -43,18 +43,32 @@ const SignUp = () => {
     
     try {
       await signup({
-        full_name: values.fullname,
+        username: values.email.split('@')[0], // Use email prefix as username
         email: values.email,
-        password: values.password
+        password: values.password,
+        password_confirm: values.confirmPassword,
+        first_name: values.fullname.split(' ')[0] || '',
+        last_name: values.fullname.split(' ').slice(1).join(' ') || ''
       });
       
       setSubmitMessage('success', 'Account created successfully! Welcome to BASTA Desserts.');
       setTimeout(() => navigate('/'), 2000);
       
     } catch (error) {
-      setSubmitMessage('error', error.response?.data?.message || 'Sign up failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      // Get the actual error message from backend
+      let errorMessage = 'Sign up failed. Please try again.';
+      
+      if (error.response?.data?.details) {
+        // Extract password validation errors
+        const details = error.response.data.details;
+        if (details.password) {
+          errorMessage = `Password requirements: ${details.password.join(' ')}`;
+        }
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      setSubmitMessage('error', errorMessage);
     }
   };
 
