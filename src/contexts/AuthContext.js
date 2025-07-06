@@ -1,5 +1,8 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { setNavigationCallback } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -14,6 +17,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = () => {
@@ -22,8 +26,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     };
 
+    // Set up navigation callback for API service
+    setNavigationCallback((path) => {
+      setUser(null); // Clear user state immediately
+      navigate(path);
+    });
+
     initializeAuth();
-  }, []);
+  }, [navigate]);
 
   const login = async (credentials) => {
     const response = await authService.login(credentials);

@@ -1,3 +1,4 @@
+// src/services/api.js
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
@@ -9,6 +10,14 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Navigation callback - will be set by AuthContext
+let navigationCallback = null;
+
+// Function to set navigation callback from React Router
+export const setNavigationCallback = (callback) => {
+  navigationCallback = callback;
+};
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -32,7 +41,15 @@ api.interceptors.response.use(
       // Handle unauthorized access
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      
+      // Use React Router navigation instead of window.location
+      if (navigationCallback) {
+        navigationCallback('/login');
+      } else {
+        // Fallback for cases where callback isn't set yet
+        console.warn('Navigation callback not set, using window.location as fallback');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

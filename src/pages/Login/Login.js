@@ -1,6 +1,6 @@
 // src/pages/Login/Login.js
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import useFormValidation from '../../hooks/useFormValidation';
 import { FormInput, SubmitStatus, SubmitButton, validationRules } from '../../components/forms/FormComponents';
@@ -8,7 +8,11 @@ import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  
+  // Get the page user was trying to access before being redirected to login
+  const from = location.state?.from?.pathname || '/';
   
   const {
     values,
@@ -43,14 +47,24 @@ const Login = () => {
       });
       
       setSubmitMessage('success', 'Login successful! Welcome to BASTA Desserts.');
-      setTimeout(() => navigate('/'), 2000);
+      
+      // Redirect to intended page or dashboard based on user role
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 1000);
       
     } catch (error) {
-      setSubmitMessage('error', error.response?.data?.message || 'Login failed. Please check your credentials.');
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'Login failed. Please check your credentials.';
+      setSubmitMessage('error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Show helpful message if user was redirected due to 401
+  const showRedirectMessage = location.state?.from && location.state.from.pathname !== '/';
 
   return (
     <div className="pastel-gradient min-h-screen flex flex-col">
@@ -59,8 +73,16 @@ const Login = () => {
           <div className="pastel-gradient h-3"></div>
           <div className="p-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
-              <p className="text-gray-600">Sign in to access your favorite recipes</p>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back!</h2>
+              <p className="text-gray-600">Sign in to your BASTA Desserts account</p>
+              
+              {showRedirectMessage && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    Please log in to continue to your requested page.
+                  </p>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -97,19 +119,18 @@ const Login = () => {
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
                   <input
-                    id="rememberMe"
-                    name="rememberMe"
                     type="checkbox"
+                    name="rememberMe"
                     checked={values.rememberMe}
                     onChange={handleChange}
-                    className="h-4 w-4 text-purple-500 focus:ring-purple-400 border-gray-300 rounded"
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                   />
-                  <span className="ml-2 block text-sm text-gray-700">Remember me</span>
+                  <span className="ml-2 block text-sm text-gray-900">Remember me</span>
                 </label>
-                
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-purple-500 hover:text-purple-600 font-medium transition"
+
+                <Link 
+                  to="/forgot-password" 
+                  className="text-sm text-purple-500 hover:text-purple-600"
                 >
                   Forgot password?
                 </Link>
@@ -124,7 +145,7 @@ const Login = () => {
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
                 <Link to="/signup" className="font-medium text-purple-500 hover:text-purple-600">
-                  Sign up now
+                  Sign up here
                 </Link>
               </p>
             </div>
