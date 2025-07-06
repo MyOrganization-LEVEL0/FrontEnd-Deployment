@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { recipeService } from '../../services/recipeService'; // Add this line
+
 
 function EnhancedRecipeForm({ onSubmit, onCancel }) {
   const [imageName, setImageName] = useState('');
@@ -19,7 +21,7 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
 
   // Categories that match your existing system
   const categories = [
-    { value: 'kakanin', label: 'Kakanin' },
+    { value: 'cakes', label: 'Cakes' },
     { value: 'leche-flan', label: 'Leche Flan' },
     { value: 'ube-desserts', label: 'Ube Desserts' },
     { value: 'coconut-desserts', label: 'Coconut Desserts' },
@@ -132,27 +134,31 @@ function EnhancedRecipeForm({ onSubmit, onCancel }) {
     setIsSubmitting(true);
 
     try {
-      // Create recipe object matching your existing structure
-      const newRecipe = {
-        id: Date.now(), // Temporary ID
-        title: formData.title,
-        description: formData.description,
-        ingredients: selectedIngredients,
-        instructions: selectedInstructions,
-        category: formData.category,
-        prep_time: formData.prep_time ? `${formData.prep_time} minutes` : '',
-        cook_time: formData.cook_time ? `${formData.cook_time} minutes` : '',
-        status: 'pending',
-        views: 0,
-        rating: 0,
-        createdAt: new Date().toISOString().split('T')[0],
-        image: formData.image ? URL.createObjectURL(formData.image) : '/imgs/default-recipe.jpg'
-      };
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
       
-      onSubmit(newRecipe);
+      // Add text fields
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('prep_time', parseInt(formData.prep_time) || 0);
+      formDataToSend.append('cook_time', parseInt(formData.cook_time) || 0);
+      formDataToSend.append('servings', 4);
+      
+      // Add ingredients and instructions as JSON strings
+      formDataToSend.append('ingredients', JSON.stringify(selectedIngredients));
+      formDataToSend.append('instructions', JSON.stringify(selectedInstructions));
+      
+      // Add image file if provided
+      //if (formData.image && formData.image instanceof File) {
+        //formDataToSend.append('featured_image', formData.image);
+      //}
+
+      // REAL API call to Django with FormData
+      const response = await recipeService.createRecipe(formDataToSend);
+      
+      // Use Django's response
+      onSubmit(response.recipe);
       
     } catch (error) {
       alert('Failed to submit recipe. Please try again.');
