@@ -2,12 +2,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { recipeService } from '../../services/recipeService';
-import { useAuth } from '../../contexts/AuthContext';
 import './Recipes.css';
 
 const Recipes = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [selectedLetter, setSelectedLetter] = useState(searchParams.get('letter') || 'All');
@@ -17,7 +15,6 @@ const Recipes = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalRecipes, setTotalRecipes] = useState(0);
   
   const letters = ['All', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
@@ -29,11 +26,8 @@ const Recipes = () => {
     try {
       const params = {
         page: page,
-        page_size: 12,
+        page_size: 50, // Get more recipes to filter properly
       };
-
-      // Note: Search is handled by navigation to SearchResults page
-      // Only handle letter filtering here
 
       const response = await recipeService.getAllRecipes(params);
       
@@ -67,9 +61,16 @@ const Recipes = () => {
         slug: recipe.slug
       }));
 
-      setRecipes(transformedRecipes);
-      setTotalPages(Math.ceil((response.count || 0) / 12));
-      setTotalRecipes(response.count || 0);
+      // Paginate the filtered results on frontend
+      const startIndex = (page - 1) * 12;
+      const endIndex = startIndex + 12;
+      const paginatedRecipes = transformedRecipes.slice(startIndex, endIndex);
+
+      setRecipes(paginatedRecipes);
+      
+      // Use the actual filtered results count
+      const actualCount = transformedRecipes.length;
+      setTotalPages(Math.ceil(actualCount / 12));
       setCurrentPage(page);
 
     } catch (error) {
@@ -79,7 +80,7 @@ const Recipes = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedLetter]); // Remove searchTerm dependency since search redirects
+  }, [selectedLetter]); // Keep dependency so it refetches when letter changes
 
   // Initial load
   useEffect(() => {
@@ -106,24 +107,7 @@ const Recipes = () => {
   // Handle letter filter
   const handleLetterClick = (letter) => {
     setSelectedLetter(letter);
-    setCurrentPage(1);
-  };
-
-  // Get category color for styling
-  const getCategoryColor = (category) => {
-    const colorMap = {
-      'cakes': 'pink',
-      'cookies': 'yellow',
-      'pastries': 'amber',
-      'candy': 'red',
-      'custard': 'orange',
-      'fried_desserts': 'amber',
-      'frozen_desserts': 'blue',
-      'gelatin_desserts': 'purple',
-      'fruit_desserts': 'green',
-      'pies': 'yellow',
-    };
-    return colorMap[category] || 'pink';
+    setCurrentPage(1); // Reset to first page when changing letter
   };
 
   // Get category background color
@@ -227,21 +211,15 @@ const Recipes = () => {
                   Try Again
                 </button>
               </div>
-            ) : (
-              <p className="text-gray-600">
-                {totalRecipes > 0 ? `Found ${totalRecipes} recipes` : 'No recipes found'}
-                {selectedLetter !== 'All' && ` starting with "${selectedLetter}"`}
-                {searchTerm && ` matching "${searchTerm}"`}
-              </p>
-            )}
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {loading ? (
               // Loading skeleton cards
               [...Array(8)].map((_, index) => (
-                <div key={index} className="category-card rounded-xl overflow-hidden shadow-md bg-white">
-                  <div className="relative h-48 bg-gray-200 animate-pulse"></div>
+                <div key={index} className="recipe-grid-card rounded-xl overflow-hidden shadow-md bg-white">
+                  <div className="relative bg-gray-200 animate-pulse"></div>
                   <div className="p-4">
                     <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                     <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
@@ -254,11 +232,11 @@ const Recipes = () => {
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">No recipes found</h3>
                 <p className="text-gray-600 mb-4">
-                  {searchTerm || selectedLetter !== 'All'
-                    ? 'Try adjusting your search or filters'
+                  {selectedLetter !== 'All'
+                    ? `No recipes found starting with "${selectedLetter}"`
                     : 'No recipes available at the moment'}
                 </p>
-                {(searchTerm || selectedLetter !== 'All') && (
+                {selectedLetter !== 'All' && (
                   <button
                     onClick={() => {
                       setSearchTerm('');
@@ -266,7 +244,7 @@ const Recipes = () => {
                     }}
                     className="bg-pink-400 text-white px-6 py-2 rounded-lg hover:bg-pink-500 transition"
                   >
-                    Clear Filters
+                    Show All Recipes
                   </button>
                 )}
               </div>
@@ -275,10 +253,10 @@ const Recipes = () => {
               recipes.map((recipe) => (
                 <div 
                   key={recipe.id} 
-                  className="category-card rounded-xl overflow-hidden shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow"
+                  className="recipe-grid-card rounded-xl overflow-hidden shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => navigate(`/recipe/${recipe.id}`)}
                 >
-                  <div className="relative h-48">
+                  <div className="relative">
                     {recipe.image ? (
                       <img
                         src={recipe.image}

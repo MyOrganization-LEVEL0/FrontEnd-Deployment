@@ -1,8 +1,11 @@
 // src/components/cards/CategoryCard.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Cards.css';
 
-const CategoryCard = ({ name, color, description }) => {
+const CategoryCard = ({ name, color, description, category }) => {
+  const navigate = useNavigate();
+  
   const colorClasses = {
     pink: 'bg-pink-200 text-pink-400',
     yellow: 'bg-yellow-100 text-yellow-600',
@@ -14,8 +17,55 @@ const CategoryCard = ({ name, color, description }) => {
     green: 'bg-green-100 text-green-500'
   };
 
+  // Handle "View All" button click
+  const handleViewAll = (e) => {
+    e.stopPropagation(); // Prevent card click if you add whole card click later
+    
+    // Map category names to URL-friendly slugs that match your backend
+    const categorySlugMap = {
+      'Cakes': 'cakes',
+      'Cookies': 'cookies', 
+      'Pastries': 'pastries',
+      'Candy': 'candy',
+      'Custard': 'custard',
+      'Fried Desserts': 'fried_desserts',
+      'Frozen Desserts': 'frozen_desserts',
+      'Gelatin Desserts': 'gelatin_desserts',
+      'Fruit Desserts': 'fruit_desserts',
+      'Pies': 'pies'
+    };
+
+    // Use the category prop if provided, otherwise derive from name
+    const categorySlug = category || categorySlugMap[name] || name.toLowerCase().replace(/\s+/g, '_');
+    
+    // Navigate to search results with category filter
+    navigate(`/search?category=${categorySlug}`);
+  };
+
+  // Handle whole card click (optional - navigates to same place)
+  const handleCardClick = () => {
+    const categorySlugMap = {
+      'Cakes': 'cakes',
+      'Cookies': 'cookies', 
+      'Pastries': 'pastries',
+      'Candy': 'candy',
+      'Custard': 'custard',
+      'Fried Desserts': 'fried_desserts',
+      'Frozen Desserts': 'frozen_desserts',
+      'Gelatin Desserts': 'gelatin_desserts',
+      'Fruit Desserts': 'fruit_desserts',
+      'Pies': 'pies'
+    };
+
+    const categorySlug = category || categorySlugMap[name] || name.toLowerCase().replace(/\s+/g, '_');
+    navigate(`/search?category=${categorySlug}`);
+  };
+
   return (
-    <div className="category-card rounded-xl overflow-hidden shadow-md bg-white cursor-pointer">
+    <div 
+      className="category-card rounded-xl overflow-hidden shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={handleCardClick}
+    >
       <div className="relative h-48">
         <div className={`category-image h-full w-full ${colorClasses[color].split(' ')[0]} flex items-center justify-center`}>
           <svg xmlns="http://www.w3.org/2000/svg" className={`h-24 w-24 ${colorClasses[color].split(' ')[1]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,7 +81,10 @@ const CategoryCard = ({ name, color, description }) => {
       <div className="p-4">
         <p className="text-gray-600 text-sm">{description}</p>
         <div className="mt-3 flex justify-end">
-          <button className={`${colorClasses[color].split(' ')[1]} hover:underline font-medium text-sm`}>
+          <button 
+            onClick={handleViewAll}
+            className={`${colorClasses[color].split(' ')[1]} hover:underline font-medium text-sm transition-colors duration-200`}
+          >
             View All
           </button>
         </div>

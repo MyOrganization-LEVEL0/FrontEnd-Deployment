@@ -18,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import Viewer1Dashboard from './pages/Viewer1Dashboard/Viewer1Dashboard';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ProtectedRoute from './auth/ProtectedRoute';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
 import './App.css';
 
 function App() {
@@ -45,6 +46,13 @@ function App() {
                 <>
                   <Navigation />
                   <ForgotPassword />
+                  <Footer />
+                </>
+              } />
+              <Route path="/reset-password" element={
+                <>
+                  <Navigation />
+                  <ResetPassword />
                   <Footer />
                 </>
               } />

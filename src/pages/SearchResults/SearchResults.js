@@ -42,15 +42,44 @@ const SearchResults = () => {
         if (query || selectedCategory) {
           // Use appropriate endpoint based on what we have
           if (query) {
-            // Search with query (and optional category filter)
-            const response = await recipeService.searchRecipes(query, {
-              category: selectedCategory || undefined,
-              page: currentPage,
-              page_size: 12
-            });
-            searchResults = response.results || [];
-            setTotalResults(response.count || 0);
-            setTotalPages(Math.ceil((response.count || 0) / 12));
+            // Only search if query has 2+ characters
+            if (query.trim().length >= 2) {
+              const response = await recipeService.searchRecipes(query, {
+                category: selectedCategory || undefined,
+                page: currentPage,
+                page_size: 50 // Get more results to filter properly
+              });
+              let allResults = response.results || [];
+              
+              // SMART SEARCH with PRIORITY FILTERING
+              const queryLower = query.toLowerCase().trim();
+              
+              // Priority 1: Title contains search term
+              const titleMatches = allResults.filter(recipe => 
+                recipe.title.toLowerCase().includes(queryLower) &&
+                recipe.status === 'published'
+              );
+              
+              // Priority 2: Category name contains search term (if no title matches)
+              const categoryMatches = titleMatches.length === 0 ? allResults.filter(recipe => 
+                (recipe.category_display || recipe.category).toLowerCase().includes(queryLower) &&
+                recipe.status === 'published'
+              ) : [];
+              
+              // Priority 3: Description contains search term (if no title/category matches)
+              const descriptionMatches = (titleMatches.length === 0 && categoryMatches.length === 0) ? allResults.filter(recipe => 
+                recipe.description && recipe.description.toLowerCase().includes(queryLower) &&
+                recipe.status === 'published'
+              ) : [];
+              
+              // Combine results with priority order
+              searchResults = [...titleMatches, ...categoryMatches, ...descriptionMatches];
+              
+            } else {
+              // Query too short - show no results
+              searchResults = [];
+            }
+            
           } else {
             // Category-only filter using getAllRecipes
             const response = await recipeService.getAllRecipes({
@@ -62,18 +91,19 @@ const SearchResults = () => {
             searchResults = (response.results || []).filter(recipe => 
               recipe.status === 'published'
             );
-            setTotalResults(searchResults.length);
-            setTotalPages(Math.ceil(searchResults.length / 12));
           }
         } else {
           // No query and no category - show empty results
           searchResults = [];
-          setTotalResults(0);
-          setTotalPages(1);
         }
 
+        // Paginate the filtered results on frontend
+        const startIndex = (currentPage - 1) * 12;
+        const endIndex = startIndex + 12;
+        const paginatedResults = searchResults.slice(startIndex, endIndex);
+
         // Transform results for display
-        const transformedResults = searchResults.map(recipe => ({
+        const transformedResults = paginatedResults.map(recipe => ({
           id: recipe.id,
           title: recipe.title,
           description: recipe.description,
@@ -86,6 +116,8 @@ const SearchResults = () => {
         }));
 
         setResults(transformedResults);
+        setTotalResults(searchResults.length);
+        setTotalPages(Math.ceil(searchResults.length / 12));
         
       } catch (error) {
         console.error('Search error:', error);
@@ -170,7 +202,7 @@ const SearchResults = () => {
                 name="search"
                 type="text"
                 defaultValue={query}
-                placeholder="Search for recipes..."
+                placeholder="Search recipes (minimum 2 characters)..."
                 className="w-full px-5 py-3 pr-12 rounded-full border-2 border-pink-100 focus:outline-none focus:border-pink-300 text-gray-700"
               />
               <button
@@ -238,7 +270,9 @@ const SearchResults = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-2">No recipes found</h3>
                 <p className="text-gray-600 mb-6">
                   {query 
-                    ? `We couldn't find any recipes matching "${query}"${selectedCategory ? ` in the ${categories.find(c => c.id === selectedCategory)?.name} category` : ''}.`
+                    ? query.length < 2 
+                      ? 'Please enter at least 2 characters to search for recipes.'
+                      : `We couldn't find any recipes matching "${query}"${selectedCategory ? ` in the ${categories.find(c => c.id === selectedCategory)?.name} category` : ''}.`
                     : selectedCategory 
                     ? `No recipes available in the ${categories.find(c => c.id === selectedCategory)?.name} category.`
                     : 'Please enter a search term or select a category to find recipes.'
@@ -351,7 +385,7 @@ const SearchResults = () => {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        className="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed transition"
                       >
                         Next
                       </button>

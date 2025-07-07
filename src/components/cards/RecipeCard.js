@@ -35,9 +35,9 @@ const RecipeCard = ({ color, title, description, time, recipeId, image }) => {
   };
 
   return (
-    <div className={`recipe-card ${colorClasses[color]} rounded-xl overflow-hidden shadow-md cursor-pointer h-96`} onClick={handleViewRecipe}>
+    <div className={`recipe-card ${colorClasses[color]} rounded-xl overflow-hidden shadow-md cursor-pointer`} style={{height: '400px'}} onClick={handleViewRecipe}>
       {/* Image or Icon Area */}
-      <div className="h-48 relative overflow-hidden">
+      <div className="relative overflow-hidden" style={{height: '200px'}}>
         {image ? (
           <img 
             src={image} 
@@ -62,8 +62,8 @@ const RecipeCard = ({ color, title, description, time, recipeId, image }) => {
         </div>
       </div>
       
-      {/* Content Area - Increased height for better button visibility */}
-      <div className="p-6 h-48 flex flex-col justify-between">
+      {/* Content Area */}
+      <div className="p-4 flex flex-col justify-between" style={{height: '200px'}}>
         <div className="flex-grow">
           <h3 className="text-xl font-semibold mb-2 text-gray-800 line-clamp-1">{title}</h3>
           <p className="text-gray-600 text-sm line-clamp-3 mb-4">{description}</p>

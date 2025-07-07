@@ -31,7 +31,20 @@ export const authService = {
   },
 
   forgotPassword: async (email) => {
-    return await api.post('/auth/forgot-password/', { email });
+    const response = await api.post('/auth/forgot-password/', { email });
+    return response.data;
+  },
+
+  // NEW: Validate reset token
+  validateResetToken: async (token) => {
+    const response = await api.get(`/auth/validate-reset-token/?token=${token}`);
+    return response.data;
+  },
+
+  // NEW: Reset password with token
+  resetPassword: async (data) => {
+    const response = await api.post('/auth/reset-password/', data);
+    return response.data;
   },
 
   getCurrentUser: () => {
