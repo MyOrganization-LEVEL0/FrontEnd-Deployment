@@ -1,3 +1,4 @@
+// src/services/recipeService.js
 import api from './api';
 
 export const recipeService = {
@@ -26,15 +27,20 @@ export const recipeService = {
     return response.data;
   },
 
-  searchRecipes: async (query) => {
-    const response = await api.get(`/recipes/search/`, { 
-      params: { q: query } 
+  // Enhanced search method with additional parameters
+  searchRecipes: async (query, params = {}) => {
+    const searchParams = { 
+      q: query,
+      ...params 
+    };
+    const response = await api.get('/recipes/search/', { 
+      params: searchParams 
     });
     return response.data;
   },
 
   getRecipesByCategory: async (category) => {
-    const response = await api.get(`/recipes/`, { 
+    const response = await api.get('/recipes/', { 
       params: { category } 
     });
     return response.data;

@@ -22,13 +22,15 @@ function EnhancedRecipeForm({ recipe = null, isEditing = false, onSubmit, onCanc
   // Categories that match your existing system
   const categories = [
     { value: 'cakes', label: 'Cakes' },
-    { value: 'leche-flan', label: 'Leche Flan' },
-    { value: 'ube-desserts', label: 'Ube Desserts' },
-    { value: 'coconut-desserts', label: 'Coconut Desserts' },
-    { value: 'rice-desserts', label: 'Rice Desserts' },
-    { value: 'bibingka', label: 'Bibingka' },
-    { value: 'traditional-sweets', label: 'Traditional Sweets' },
-    { value: 'frozen-treats', label: 'Frozen Treats' },
+    { value: 'cookies', label: 'Cookies' },
+    { value: 'pastries', label: 'Pastries' },
+    { value: 'candy', label: 'Candy' },
+    { value: 'custard', label: 'Custard' },
+    { value: 'fried_desserts', label: 'Fried Desserts' },
+    { value: 'frozen_desserts', label: 'Frozen Desserts' },
+    { value: 'gelatin_desserts', label: 'Gelatin Desserts' },
+    { value: 'fruit_desserts', label: 'Fruit Desserts' },
+    { value: 'pies', label: 'Pies' },
   ];
 
   // Initialize form with existing recipe data when editing
