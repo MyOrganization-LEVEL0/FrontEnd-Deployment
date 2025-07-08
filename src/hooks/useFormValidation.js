@@ -30,6 +30,11 @@ const useFormValidation = (initialValues, validationRules) => {
       const error = validateField(name, newValue);
       setErrors(prev => ({ ...prev, [name]: error }));
     }
+
+    // Clear submit status when user makes changes
+    if (submitStatus.message) {
+      setSubmitStatus({ type: '', message: '' });
+    }
   };
 
   const handleBlur = (e) => {
@@ -63,7 +68,19 @@ const useFormValidation = (initialValues, validationRules) => {
 
   const setSubmitMessage = (type, message) => {
     setSubmitStatus({ type, message });
-    setTimeout(() => setSubmitStatus({ type: '', message: '' }), 5000);
+    if (type === 'success') {
+      // Clear success message after 5 seconds
+      setTimeout(() => setSubmitStatus({ type: '', message: '' }), 5000);
+    }
+    // Don't auto-clear error messages - let user dismiss them
+  };
+
+  // ADD THIS FUNCTION - resetForm
+  const resetForm = () => {
+    setValues(initialValues);
+    setErrors({});
+    setTouched({});
+    setSubmitStatus({ type: '', message: '' });
   };
 
   return {
@@ -76,7 +93,8 @@ const useFormValidation = (initialValues, validationRules) => {
     handleChange,
     handleBlur,
     validateAll,
-    setSubmitMessage
+    setSubmitMessage,
+    resetForm  // ADD THIS LINE
   };
 };
 

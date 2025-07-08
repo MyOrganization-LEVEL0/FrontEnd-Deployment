@@ -18,6 +18,31 @@ export const validationRules = {
   confirmPassword: [
     (value) => !value ? 'Please confirm your password' : '',
     (value, allValues) => value && value !== allValues.password ? 'Passwords do not match' : ''
+  ],
+  // Additional validation rules for contact form
+  name: [
+    (value) => !value ? 'Name is required' : '',
+    (value) => value && value.length < 2 ? 'Name must be at least 2 characters' : ''
+  ],
+  message: [
+    (value) => !value ? 'Message is required' : '',
+    (value) => value && value.length < 10 ? 'Message must be at least 10 characters' : '',
+    (value) => value && value.length > 2000 ? 'Message must be less than 2000 characters' : ''
+  ],
+  phone: [
+    (value) => {
+      if (!value || value.trim() === '') return ''; // Optional field
+      
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Must have between 7-15 digits total
+      if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+        return 'Phone number must be between 7-15 digits';
+      }
+      
+      return ''; // Valid
+    }
   ]
 };
 
