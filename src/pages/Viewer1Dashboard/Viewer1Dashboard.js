@@ -26,7 +26,6 @@ const Viewer1Dashboard = () => {
     memberSince: authUser?.date_joined ? new Date(authUser.date_joined).toLocaleDateString() : '',
     stats: {
       recipes: recipes.length,
-      reviews: 0,
       favorites: savedRecipes.length
     }
   };
@@ -58,7 +57,6 @@ const Viewer1Dashboard = () => {
         servings: recipe.servings,
         status: recipe.status,
         views: recipe.views_count,
-        rating: recipe.average_rating || 0,
         createdAt: new Date(recipe.created_at).toLocaleDateString(),
         image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image'
       }));
@@ -86,7 +84,6 @@ const Viewer1Dashboard = () => {
         id: recipe.id,
         title: recipe.title,
         author: recipe.author ? `${recipe.author.first_name} ${recipe.author.last_name}` : 'Unknown',
-        rating: recipe.average_rating || 0,
         savedAt: new Date(recipe.created_at).toLocaleDateString(), // When recipe was created
         image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image',
         description: recipe.description
@@ -313,7 +310,6 @@ const Viewer1Dashboard = () => {
                               {recipe.status}
                             </span>
                             <span>👁️ {recipe.views} views</span>
-                            <span>⭐ {recipe.rating || 'Not rated'}</span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -375,7 +371,6 @@ const Viewer1Dashboard = () => {
                           <h3 className="text-lg font-medium text-gray-900">{recipe.title}</h3>
                           <p className="text-sm text-gray-600">by {recipe.author}</p>
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                            <span>⭐ {recipe.rating}</span>
                             <span>Saved {recipe.savedAt}</span>
                           </div>
                         </div>
@@ -466,15 +461,10 @@ const Viewer1Dashboard = () => {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Statistics</h2>
                 
-                <div className="grid grid-cols-3 gap-8">
+                <div className="grid grid-cols-2 gap-8">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-pink-600 mb-2">{user.stats.recipes}</div>
                     <div className="text-sm text-gray-600">Recipes</div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-pink-600 mb-2">{user.stats.reviews}</div>
-                    <div className="text-sm text-gray-600">Reviews</div>
                   </div>
                   
                   <div className="text-center">

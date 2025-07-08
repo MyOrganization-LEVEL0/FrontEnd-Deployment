@@ -64,7 +64,6 @@ const RecipeDetailPage = () => {
           author: recipeData.author,
           views_count: recipeData.views_count || 0,
           likes_count: recipeData.likes_count || 0,
-          average_rating: recipeData.average_rating || 0,
           created_at: recipeData.created_at,
           is_favorited: recipeData.is_favorited || false,
           can_edit: recipeData.can_edit || false
@@ -355,12 +354,6 @@ const RecipeDetailPage = () => {
               </h1>
               
               <div className="flex items-center gap-4 text-sm text-gray-600 no-print">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                  {recipe.average_rating || 0}
-                </span>
                 <span>{recipe.views_count} views</span>
               </div>
             </div>

@@ -22,7 +22,6 @@ const SuperadminDashboard = () => {
         category: 'Custard',
         status: 'published',
         views: 2341,
-        rating: 4.8,
         createdAt: '2024-01-15',
         image: '/imgs/leche-flan.jpg',
         featured: true
@@ -35,7 +34,6 @@ const SuperadminDashboard = () => {
         category: 'Kakanin',
         status: 'published',
         views: 1892,
-        rating: 4.9,
         createdAt: '2024-01-20',
         image: '/imgs/ube-halaya.jpg',
         featured: false
@@ -48,7 +46,6 @@ const SuperadminDashboard = () => {
         category: 'Kakanin',
         status: 'pending',
         views: 45,
-        rating: 0,
         createdAt: '2024-02-01',
         image: '/imgs/biko.jpg',
         featured: false
@@ -138,8 +135,7 @@ const SuperadminDashboard = () => {
     totalUsers: users.length,
     activeUsers: users.filter(u => u.status === 'active').length,
     suspendedUsers: users.filter(u => u.status === 'suspended').length,
-    totalViews: recipes.reduce((sum, r) => sum + r.views, 0),
-    averageRating: recipes.reduce((sum, r) => sum + r.rating, 0) / recipes.length || 0
+    totalViews: recipes.reduce((sum, r) => sum + r.views, 0)
   };
 
   // Filter functions
@@ -227,7 +223,7 @@ const SuperadminDashboard = () => {
             <h2 className="text-2xl font-bold text-gray-900">System Overview</h2>
             
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex items-center">
                   <div className="p-3 bg-blue-100 rounded-lg">
@@ -267,20 +263,6 @@ const SuperadminDashboard = () => {
                   <div className="ml-4">
                     <p className="text-2xl font-semibold text-gray-900">{stats.totalViews.toLocaleString()}</p>
                     <p className="text-sm text-gray-600">Total Views</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center">
-                  <div className="p-3 bg-yellow-100 rounded-lg">
-                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.915a1 1 0 00.95-.69l1.519-4.674z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-2xl font-semibold text-gray-900">{stats.averageRating.toFixed(1)}</p>
-                    <p className="text-sm text-gray-600">Avg Rating</p>
                   </div>
                 </div>
               </div>
@@ -346,9 +328,6 @@ const SuperadminDashboard = () => {
                         Views
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Rating
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -379,9 +358,6 @@ const SuperadminDashboard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {recipe.views.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {recipe.rating > 0 ? `⭐ ${recipe.rating}` : 'No ratings'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <div className="flex gap-2">
