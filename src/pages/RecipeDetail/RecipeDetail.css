@@ -29,187 +29,220 @@
   background-color: #f9fafb;
 }
 
-/* Enhanced Print Styles */
+/* Hide print-only content in normal view */
+.print-only {
+  display: none !important;
+}
+
+/* SIMPLIFIED Print Styles */
 @media print {
-  /* Hide non-essential elements */
+  /* Hide specific non-essential elements */
   .no-print,
-  .favorite-button,
-  .print-button,
-  .comment-section,
-  .shadow-sm {
+  button,
+  .absolute,
+  nav,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg,
+  /* Hide navigation elements */
+  .flex.items-center.text-pink-600,
+  .flex.gap-2,
+  .bg-pink-500,
+  .bg-white.text-gray-700,
+  .bg-white.text-red-600,
+  /* Hide comments section */
+  .bg-white.rounded-lg.shadow-sm.p-6.no-print,
+  /* Hide back button */
+  .mb-6.flex.items-center,
+  /* Hide navigation bar */
+  .max-w-4xl.mx-auto.px-4.py-6,
+  /* Hide action buttons container */
+  .absolute.top-4.right-4,
+  /* Hide any element with these classes */
+  .cursor-pointer,
+  textarea,
+  input[type="checkbox"],
+  /* ADDED: Hide checkboxes and duplicate ingredients */
+  .flex.items-start.cursor-pointer,
+  .no-print {
     display: none !important;
   }
 
   /* Show print-only elements */
   .print-only {
-    display: inline-block !important;
+    display: block !important;
+  }
+
+  /* Show recipe image */
+  img {
+    max-width: 300pt !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto 20pt auto !important;
+    border: 1pt solid #ccc !important;
   }
   
-  /* Reset layout and colors for print */
+  /* Basic print setup */
   body {
     background: white !important;
-    font-size: 12pt;
-    line-height: 1.4;
     color: black !important;
-  }
-  
-  .recipe-detail-container {
-    background: white !important;
-    padding: 0 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
     margin: 0 !important;
+    padding: 20pt !important;
   }
   
-  .container {
-    max-width: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  
-  /* Remove all styling for clean print */
-  .bg-gray-50,
+  /* Ensure main content is visible */
+  .recipe-detail-container,
+  .container,
   .bg-white,
-  .bg-pink-500,
-  .shadow-sm,
-  .shadow-md,
-  .shadow-lg,
-  .rounded-lg {
+  .rounded-lg,
+  .p-6,
+  .space-y-6,
+  .space-y-4,
+  .mb-8,
+  .mb-6,
+  .mb-4 {
     background: white !important;
+    color: black !important;
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    margin: 0 0 16pt 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
   }
   
-  .sticky {
-    position: static !important;
-  }
-
-  /* Recipe title styling */
-  .print-title {
+  /* Recipe title */
+  h1 {
     font-size: 24pt !important;
     font-weight: bold !important;
-    margin-bottom: 16pt !important;
     color: black !important;
     text-align: center !important;
+    margin: 0 0 16pt 0 !important;
   }
   
-  /* Recipe meta info */
-  .print-meta {
-    text-align: center !important;
-    margin-bottom: 20pt !important;
-    font-size: 10pt !important;
-    color: #666 !important;
+  /* Recipe description */
+  p {
+    font-size: 12pt !important;
+    color: black !important;
+    margin: 0 0 12pt 0 !important;
+    text-align: justify !important;
   }
   
-  /* Section titles */
-  .print-section-title {
+  /* Section headings */
+  h2 {
     font-size: 16pt !important;
     font-weight: bold !important;
-    margin-bottom: 12pt !important;
     color: black !important;
-    border-bottom: 1pt solid #ccc !important;
+    margin: 20pt 0 12pt 0 !important;
+    border-bottom: 1pt solid black !important;
     padding-bottom: 4pt !important;
   }
   
-  /* Ingredients section */
-  .print-ingredients {
+  /* Recipe timing info */
+  .grid.grid-cols-2.md\:grid-cols-4 {
+    display: block !important;
+    text-align: center !important;
+    margin: 16pt 0 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .grid.grid-cols-2.md\:grid-cols-4 > div {
+    display: inline-block !important;
+    margin: 0 8pt 8pt 8pt !important;
+    padding: 4pt 8pt !important;
+    border: 1pt solid #ccc !important;
     background: white !important;
-    box-shadow: none !important;
-    border: none !important;
-    margin-bottom: 20pt !important;
-    page-break-inside: avoid;
+    vertical-align: top !important;
   }
   
-  .print-ingredients-list {
-    margin: 0 !important;
-    padding: 0 !important;
+  /* Lists - ALTERNATIVE: Use stars for dessert recipes */
+  ul, ol {
+    margin: 0 0 16pt 0 !important;
+    padding-left: 20pt !important;
+    list-style-type: none !important; /* Remove default bullets */
   }
   
-  .print-ingredient-text {
-    font-size: 10pt !important;
+  li {
+    margin-bottom: 6pt !important;
     color: black !important;
-    line-height: 1.4 !important;
-    text-decoration: none !important;
+    font-size: 11pt !important;
+    position: relative !important;
+    padding-left: 15pt !important;
   }
   
-  .print-bullet {
-    background: black !important;
-    width: 4pt !important;
-    height: 4pt !important;
+  /* OPTION 5: Stars (fun for desserts) - ACTIVE */
+  li:not(:empty)::before {
+    content: "★ " !important;
+    position: absolute !important;
+    left: 0 !important;
+    font-weight: bold !important;
+    color: black !important;
   }
   
-  /* Instructions section */
-  .print-instructions {
-    background: white !important;
-    box-shadow: none !important;
-    border: none !important;
-    margin-bottom: 20pt !important;
+  /* FIXED: Hide empty list items completely */
+  li:empty {
+    display: none !important;
   }
   
-  .print-instructions-list {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
-  .print-instruction-item {
+  /* Instructions formatting - number beside text */
+  .print-instruction-item,
+  .flex.gap-4 {
+    display: flex !important;
+    align-items: flex-start !important;
     margin-bottom: 12pt !important;
-    page-break-inside: avoid;
+    page-break-inside: avoid !important;
   }
   
-  .print-step-number {
+  .print-step-number,
+  .flex-shrink-0 span {
     background: black !important;
     color: white !important;
     width: 20pt !important;
     height: 20pt !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     font-size: 10pt !important;
     font-weight: bold !important;
+    margin-right: 8pt !important;
+    flex-shrink: 0 !important;
   }
   
-  .print-instruction-text {
-    font-size: 10pt !important;
+  .print-instruction-text,
+  .flex-1 p {
+    font-size: 11pt !important;
     color: black !important;
     line-height: 1.4 !important;
+    margin: 0 !important;
+    flex: 1 !important;
   }
   
-  /* Remove grid layout for better print flow */
+  /* Grid layouts - convert to block */
   .grid,
-  .lg\:grid-cols-3,
-  .lg\:col-span-1,
-  .lg\:col-span-2 {
+  .flex {
     display: block !important;
-    grid-template-columns: none !important;
-    column-span: none !important;
   }
   
-  /* Ensure proper page breaks */
-  .print-ingredients {
-    page-break-after: avoid;
+  /* Force visibility for all text content */
+  span, div, p, h1, h2, h3, li {
+    color: black !important;
+    background: white !important;
   }
   
-  .print-instructions {
-    page-break-before: avoid;
+  /* Remove all fancy styling */
+  * {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background-image: none !important;
   }
   
-  /* Hide recipe image in print to save space */
-  img {
+  /* Hide star rating and view count */
+  .flex.items-center.gap-4.text-sm.text-gray-600 {
     display: none !important;
-  }
-  
-  /* If you want to keep the image, uncomment this instead:
-  img {
-    max-width: 100% !important;
-    height: auto !important;
-    margin: 0 auto 20pt auto !important;
-    display: block !important;
-  }
-  */
-  
-  /* Hide everything except recipe content */
-  body * {
-    visibility: hidden;
-  }
-  
-  /* Show only recipe content */
-  .recipe-detail-container,
-  .recipe-detail-container * {
-    visibility: visible;
   }
 }

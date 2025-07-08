@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { recipeService } from '../../services/recipeService';
 import { useAuth } from '../../contexts/AuthContext';
+import ReportModal from '../../components/ReportModal/ReportModal';
 import './RecipeDetail.css';
 
 const RecipeDetailPage = () => {
@@ -17,6 +18,14 @@ const RecipeDetailPage = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [checkedIngredients, setCheckedIngredients] = useState([]);
+  
+  // Report modal states
+  const [reportModal, setReportModal] = useState({
+    isOpen: false,
+    contentType: null,
+    contentId: null,
+    contentTitle: ''
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +84,7 @@ const RecipeDetailPage = () => {
           const transformedComments = commentsData.map(comment => ({
             id: comment.id,
             user: comment.user ? `${comment.user.first_name} ${comment.user.last_name}` : 'Anonymous',
+            userId: comment.user?.id,
             date: new Date(comment.created_at).toLocaleDateString(),
             comment: comment.content
           }));
@@ -109,9 +119,29 @@ const RecipeDetailPage = () => {
     };
   }, [id]);
 
-  const handleFavorite = () => {
-    setIsFavorited(!isFavorited);
-    alert(isFavorited ? 'Removed from favorites' : 'Added to favorites!');
+  // FIXED: Real favorite functionality
+  const handleFavorite = async () => {
+    if (!user) {
+      alert('Please log in to add favorites');
+      return;
+    }
+
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await recipeService.removeFromFavorites(id);
+        setIsFavorited(false);
+        alert('Removed from favorites');
+      } else {
+        // Add to favorites
+        await recipeService.addToFavorites(id);
+        setIsFavorited(true);
+        alert('Added to favorites!');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert(error.message || 'Failed to update favorites. Please try again.');
+    }
   };
 
   const handlePrint = () => {
@@ -134,6 +164,7 @@ const RecipeDetailPage = () => {
       const transformedComment = {
         id: commentData.id,
         user: user ? `${user.first_name} ${user.last_name}` : 'Current User',
+        userId: user?.id,
         date: new Date().toLocaleDateString(),
         comment: newComment.trim()
       };
@@ -145,6 +176,7 @@ const RecipeDetailPage = () => {
       const fallbackComment = {
         id: comments.length + 1,
         user: user ? `${user.first_name} ${user.last_name}` : 'Current User',
+        userId: user?.id,
         date: new Date().toLocaleDateString(),
         comment: newComment.trim()
       };
@@ -157,6 +189,57 @@ const RecipeDetailPage = () => {
     const newChecked = [...checkedIngredients];
     newChecked[index] = !newChecked[index];
     setCheckedIngredients(newChecked);
+  };
+
+  // Report handling functions
+  const openReportModal = (contentType, contentId, contentTitle = '') => {
+    if (!user) {
+      alert('Please log in to report content');
+      return;
+    }
+    
+    setReportModal({
+      isOpen: true,
+      contentType,
+      contentId,
+      contentTitle
+    });
+  };
+
+  const closeReportModal = () => {
+    setReportModal({
+      isOpen: false,
+      contentType: null,
+      contentId: null,
+      contentTitle: ''
+    });
+  };
+
+  const handleReportSubmit = async (reportData) => {
+    try {
+      await recipeService.submitReport(reportData);
+      alert('Report submitted successfully. Our moderation team will review it shortly.');
+    } catch (error) {
+      console.error('Report submission error:', error); // Debug logging
+      
+      // Handle duplicate report case more gracefully
+      if (error.message.includes('already reported')) {
+        alert('You\'ve already reported this content.');
+        // Don't re-throw for duplicate reports - this is handled successfully
+        return;
+      } else {
+        // More detailed error message for debugging
+        const errorMsg = error.message || 'Failed to submit report. Please try again.';
+        alert(`Error: ${errorMsg}`);
+        console.error('Full error details:', error);
+        throw error; // Only re-throw for actual errors
+      }
+    }
+  };
+
+  const canCurrentUserReport = (contentUserId) => {
+    // Users shouldn't report their own content
+    return user && user.id !== contentUserId;
   };
 
   if (loading) {
@@ -231,87 +314,102 @@ const RecipeDetailPage = () => {
                 onClick={handleFavorite}
                 className={`p-3 rounded-full shadow-lg transition ${
                   isFavorited 
-                    ? 'bg-red-500 text-white' 
-                    : 'bg-white text-gray-600 hover:text-red-500'
+                    ? 'bg-pink-500 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
+                title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               >
-                <svg className="w-6 h-6" fill={isFavorited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
               </button>
               
               <button
                 onClick={handlePrint}
-                className="p-3 bg-white text-gray-600 rounded-full shadow-lg hover:text-gray-800 transition"
+                className="p-3 bg-white text-gray-700 rounded-full shadow-lg hover:bg-gray-50 transition"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
               </button>
+
+              {/* Report Recipe Button - Always show if user is logged in */}
+              {user && (
+                <button
+                  onClick={() => openReportModal('recipe', recipe.id, recipe.title)}
+                  className="p-3 bg-white text-red-600 rounded-full shadow-lg hover:bg-red-50 transition"
+                  title="Report this recipe"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
-          
-          <div className="p-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 print-title">
-              {recipe.title}
-            </h1>
-            
-            {recipe.description && (
-              <p className="text-gray-600 mb-4">{recipe.description}</p>
-            )}
 
-            <div className="print-meta mb-6 text-sm text-gray-600">
-              <p>Prep Time: {recipe.prep_time} | Cook Time: {recipe.cook_time} | Servings: {recipe.servings}</p>
+          <div className="p-6">
+            <div className="flex flex-wrap items-center justify-between mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 print-title">
+                {recipe.title}
+              </h1>
+              
+              <div className="flex items-center gap-4 text-sm text-gray-600 no-print">
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  {recipe.average_rating || 0}
+                </span>
+                <span>{recipe.views_count} views</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-gray-500 no-print">
-              <span>👁️ {recipe.views_count} views</span>
-              <span>❤️ {recipe.likes_count} likes</span>
-              <span>⭐ {recipe.average_rating > 0 ? recipe.average_rating.toFixed(1) : 'No ratings'}</span>
-              {recipe.author && (
-                <>
-                  <span>•</span>
-                  <span>By {recipe.author.first_name} {recipe.author.last_name}</span>
-                </>
-              )}
+            <p className="text-gray-600 mb-6 print-description">{recipe.description}</p>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center print-recipe-info">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-2xl font-bold text-pink-500">{recipe.prep_time}</div>
+                <div className="text-sm text-gray-600">Prep Time</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-2xl font-bold text-pink-500">{recipe.cook_time}</div>
+                <div className="text-sm text-gray-600">Cook Time</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-2xl font-bold text-pink-500">{recipe.total_time}</div>
+                <div className="text-sm text-gray-600">Total Time</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-2xl font-bold text-pink-500">{recipe.servings}</div>
+                <div className="text-sm text-gray-600">Servings</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recipe Content */}
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Ingredients */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 print-ingredients">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 print-section-title">
-                Ingredients
-              </h2>
-              
-              {recipe.ingredients.length > 0 ? (
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
+              {recipe.ingredients && recipe.ingredients.length > 0 ? (
                 <ul className="space-y-3 print-ingredients-list">
                   {recipe.ingredients.map((ingredient, index) => (
-                    <li key={index} className="flex items-start">
-                      <div className="no-print mr-3 mt-1">
+                    <li key={index} className="flex items-start print-ingredient-item">
+                      <label className="flex items-start cursor-pointer w-full no-print">
                         <input
                           type="checkbox"
-                          id={`ingredient-${index}`}
-                          checked={checkedIngredients[index]}
+                          checked={checkedIngredients[index] || false}
                           onChange={() => handleIngredientCheck(index)}
-                          className="w-4 h-4 text-pink-600 bg-gray-100 border-gray-300 rounded focus:ring-pink-500 focus:ring-2"
+                          className="mt-1 mr-3 accent-pink-500"
                         />
-                      </div>
-                      
-                      <span className="print-only inline-block w-2 h-2 bg-pink-500 rounded-full mt-2 mr-3 flex-shrink-0 print-bullet"></span>
-                      
-                      <label 
-                        htmlFor={`ingredient-${index}`}
-                        className={`text-gray-700 print-ingredient-text cursor-pointer select-none transition-all ${
-                          checkedIngredients[index] 
-                            ? 'line-through text-gray-400' 
-                            : 'text-gray-700'
-                        }`}
-                      >
-                        {ingredient}
+                        <span className={`text-gray-700 leading-relaxed ${checkedIngredients[index] ? 'line-through text-gray-500' : ''}`}>
+                          {ingredient}
+                        </span>
                       </label>
+                      <span className="text-gray-700 leading-relaxed print-only">{ingredient}</span>
                     </li>
                   ))}
                 </ul>
@@ -323,12 +421,9 @@ const RecipeDetailPage = () => {
 
           {/* Instructions */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-8 print-instructions">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 print-section-title">
-                Instructions
-              </h2>
-              
-              {recipe.instructions.length > 0 ? (
+            <div className="bg-white rounded-lg shadow-sm p-6 print-instructions">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Instructions</h2>
+              {recipe.instructions && recipe.instructions.length > 0 ? (
                 <div className="space-y-6 print-instructions-list">
                   {recipe.instructions.map((instruction, index) => (
                     <div key={index} className="flex gap-4 print-instruction-item">
@@ -349,59 +444,80 @@ const RecipeDetailPage = () => {
                 <p className="text-gray-500">No instructions provided</p>
               )}
             </div>
+          </div>
+        </div>
 
-            {/* Comments Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6 no-print">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments ({comments.length})</h2>
-              
-              {/* Add Comment Form */}
-              <div className="mb-8">
-                <div className="space-y-4">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Share your thoughts about this recipe..."
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={handleCommentSubmit}
-                    className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition"
-                  >
-                    Add Comment
-                  </button>
-                </div>
-              </div>
-
-              {/* Comments List */}
-              <div className="space-y-6">
-                {comments.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">
-                    No comments yet. Be the first to share your thoughts!
-                  </p>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                          <span className="text-pink-600 font-semibold text-sm">
-                            {comment.user.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{comment.user}</p>
-                          <p className="text-sm text-gray-500">{comment.date}</p>
-                        </div>
-                      </div>
-                      <p className="text-gray-700 ml-13">{comment.comment}</p>
-                    </div>
-                  ))
-                )}
-              </div>
+        {/* Comments Section */}
+        <div className="bg-white rounded-lg shadow-sm p-6 no-print mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments ({comments.length})</h2>
+          
+          {/* Add Comment Form */}
+          <div className="mb-8">
+            <div className="space-y-4">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Share your thoughts about this recipe..."
+                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              />
+              <button
+                onClick={handleCommentSubmit}
+                className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition"
+              >
+                Add Comment
+              </button>
             </div>
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-6">
+            {comments.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No comments yet. Be the first to share your thoughts!
+              </p>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        {comment.user.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{comment.user}</p>
+                        <p className="text-sm text-gray-500">{comment.date}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Report Comment Button */}
+                    {canCurrentUserReport(comment.userId) && (
+                      <button
+                        onClick={() => openReportModal('comment', comment.id, `Comment by ${comment.user}`)}
+                        className="text-red-500 hover:text-red-700 text-sm px-2 py-1 rounded hover:bg-red-50 transition"
+                        title="Report this comment"
+                      >
+                        🚩 Report
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-gray-700 leading-relaxed ml-11">{comment.comment}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModal.isOpen}
+        onClose={closeReportModal}
+        contentType={reportModal.contentType}
+        contentId={reportModal.contentId}
+        contentTitle={reportModal.contentTitle}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 };

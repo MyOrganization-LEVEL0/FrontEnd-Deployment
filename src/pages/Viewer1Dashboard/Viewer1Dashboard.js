@@ -65,21 +65,45 @@ const Viewer1Dashboard = () => {
       
       setRecipes(transformedRecipes);
       
-      // TODO: Load user's favorited recipes when favorites API is ready
-      setSavedRecipes([]);
-      
     } catch (error) {
       console.error('Error loading user recipes:', error);
       setRecipes([]);
-      setSavedRecipes([]);
     } finally {
       setLoading(false);
     }
   }, [authUser?.id]);
 
+  // ADDED: Load user's favorited recipes
+  const loadUserFavorites = useCallback(async () => {
+    if (!authUser?.id) return;
+    
+    try {
+      // Get user's favorited recipes
+      const response = await recipeService.getUserFavorites();
+      
+      // Transform API data to match existing component structure
+      const transformedFavorites = response.results?.map(recipe => ({
+        id: recipe.id,
+        title: recipe.title,
+        author: recipe.author ? `${recipe.author.first_name} ${recipe.author.last_name}` : 'Unknown',
+        rating: recipe.average_rating || 0,
+        savedAt: new Date(recipe.created_at).toLocaleDateString(), // When recipe was created
+        image: recipe.featured_image || 'https://via.placeholder.com/300x200?text=No+Image',
+        description: recipe.description
+      })) || [];
+      
+      setSavedRecipes(transformedFavorites);
+      
+    } catch (error) {
+      console.error('Error loading user favorites:', error);
+      setSavedRecipes([]);
+    }
+  }, [authUser?.id]);
+
   useEffect(() => {
     loadUserRecipes();
-  }, [loadUserRecipes]);
+    loadUserFavorites(); // ADDED: Load favorites too
+  }, [loadUserRecipes, loadUserFavorites]);
 
   // Handle editing a recipe
   const handleEditRecipe = async (recipe) => {
@@ -118,6 +142,25 @@ const Viewer1Dashboard = () => {
       alert('Failed to delete recipe. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ADDED: Handle removing from favorites
+  const handleRemoveFromFavorites = async (recipeId, recipeTitle) => {
+    if (!window.confirm(`Remove "${recipeTitle}" from your saved recipes?`)) {
+      return;
+    }
+
+    try {
+      await recipeService.removeFromFavorites(recipeId);
+      
+      // Remove from local state
+      setSavedRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
+      
+      alert('Recipe removed from favorites');
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+      alert('Failed to remove from favorites. Please try again.');
     }
   };
 
@@ -311,7 +354,10 @@ const Viewer1Dashboard = () => {
                   <div className="text-6xl mb-4">❤️</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No saved recipes</h3>
                   <p className="text-gray-600 mb-4">Save recipes you love to find them easily later!</p>
-                  <button className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition">
+                  <button 
+                    onClick={() => window.location.href = '/'}
+                    className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+                  >
                     Browse Recipes
                   </button>
                 </div>
@@ -340,7 +386,11 @@ const Viewer1Dashboard = () => {
                           >
                             View
                           </button>
-                          <button className="px-3 py-1 text-sm text-red-600 hover:text-red-800">
+                          {/* UPDATED: Real remove functionality */}
+                          <button 
+                            onClick={() => handleRemoveFromFavorites(recipe.id, recipe.title)}
+                            className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                          >
                             Remove
                           </button>
                         </div>

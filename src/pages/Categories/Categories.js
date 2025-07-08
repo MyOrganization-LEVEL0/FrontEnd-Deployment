@@ -1,10 +1,23 @@
 // src/pages/Categories/Categories.js
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CategoryCard from '../../components/cards/CategoryCard';
 import { categories } from '../../data/categories';
 import './Categories.css';
 
 const Categories = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Handle search - same as Recipes page
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to search results page with query
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   return (
     <>
       {/* Hero */}
@@ -14,18 +27,23 @@ const Categories = () => {
           <p className="text-lg text-gray-700 mb-8">Explore our delicious dessert recipes by category</p>
           
           {/* Search */}
-          <div className="relative max-w-xl mx-auto">
+          <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
             <input
               type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input w-full px-5 py-3 rounded-full border-2 border-pink-100 focus:outline-none"
               placeholder="Search for recipes..."
             />
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-400 text-white p-2 rounded-full hover:bg-pink-500">
+            <button 
+              type="submit"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-400 text-white p-2 rounded-full hover:bg-pink-500"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-          </div>
+          </form>
         </div>
       </section>
 
