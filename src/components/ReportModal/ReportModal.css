@@ -1,11 +1,12 @@
 /* src/components/ReportModal/ReportModal.css */
+
 .report-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,37 +17,24 @@
 .report-modal {
   background: white;
   border-radius: 12px;
-  max-width: 500px;
   width: 100%;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .report-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 24px 0 24px;
+  padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 24px;
 }
 
 .report-modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #1f2937;
   margin: 0;
 }
@@ -55,15 +43,13 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  cursor: pointer;
   color: #6b7280;
+  cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
-.report-modal-close:hover:not(:disabled) {
-  background-color: #f3f4f6;
+.report-modal-close:hover {
   color: #374151;
 }
 
@@ -73,12 +59,11 @@
 }
 
 .report-modal-content {
-  padding: 0 24px 24px 24px;
+  padding: 24px;
 }
 
 .report-content-info {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 20px;
@@ -86,20 +71,102 @@
 
 .report-content-info p {
   margin: 0;
-  color: #374151;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+/* Choice Step Styles */
+.report-choice-step h3 {
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.report-choice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-choice-button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.report-choice-button:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.report-choice-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.report-choice-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.report-choice-text p {
+  margin: 0;
   font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Form Step Styles */
+.report-form-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.report-back-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.report-back-btn:hover {
+  background: #f3f4f6;
+}
+
+.report-back-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.report-form-header h3 {
+  margin: 0;
+  color: #1f2937;
 }
 
 .report-form-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .report-form-label {
   display: block;
-  font-weight: 600;
+  font-weight: 500;
   color: #374151;
-  margin-bottom: 12px;
-  font-size: 0.875rem;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
 }
 
 .report-types-grid {
@@ -111,51 +178,35 @@
   display: flex;
   align-items: center;
   padding: 12px;
-  border: 2px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: white;
 }
 
 .report-type-option:hover {
-  border-color: #d1d5db;
-  background-color: #f9fafb;
+  background: #f9fafb;
+  border-color: #3b82f6;
 }
 
 .report-type-option input[type="radio"] {
   margin-right: 12px;
-  accent-color: #ef4444;
-}
-
-.report-type-option input[type="radio"]:checked + .report-type-label {
-  font-weight: 600;
-  color: #ef4444;
-}
-
-.report-type-option:has(input[type="radio"]:checked) {
-  border-color: #ef4444;
-  background-color: #fef2f2;
-}
-
-.report-type-option input[type="radio"]:disabled {
-  opacity: 0.5;
+  accent-color: #3b82f6;
 }
 
 .report-type-label {
+  font-size: 0.9rem;
   color: #374151;
-  font-size: 0.875rem;
-  transition: all 0.2s;
+  cursor: pointer;
 }
 
 .report-textarea {
   width: 100%;
   padding: 12px;
-  border: 2px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
+  font-size: 0.9rem;
   font-family: inherit;
-  font-size: 0.875rem;
-  line-height: 1.5;
   resize: vertical;
   min-height: 100px;
   transition: border-color 0.2s;
@@ -163,13 +214,13 @@
 
 .report-textarea:focus {
   outline: none;
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
 }
 
 .report-textarea:disabled {
-  background-color: #f9fafb;
-  opacity: 0.7;
+  background: #f9fafb;
+  cursor: not-allowed;
 }
 
 .character-count {
@@ -184,34 +235,37 @@
   gap: 12px;
   justify-content: flex-end;
   margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
 }
 
 .report-btn-cancel {
   padding: 10px 20px;
-  border: 2px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   background: white;
   color: #374151;
   border-radius: 8px;
-  font-weight: 500;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: all 0.2s;
 }
 
-.report-btn-cancel:hover:not(:disabled) {
-  border-color: #d1d5db;
-  background-color: #f9fafb;
+.report-btn-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.report-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .report-btn-submit {
   padding: 10px 20px;
-  border: none;
-  background: #ef4444;
+  background: #dc2626;
   color: white;
+  border: none;
   border-radius: 8px;
-  font-weight: 500;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -219,21 +273,19 @@
 }
 
 .report-btn-submit:hover:not(:disabled) {
-  background: #dc2626;
-  transform: translateY(-1px);
+  background: #b91c1c;
 }
 
 .report-btn-submit:disabled {
-  background: #9ca3af;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -252,43 +304,33 @@
 
 .report-disclaimer p {
   margin: 0;
-}
-
-.report-disclaimer small {
   color: #6b7280;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  text-align: center;
 }
 
-/* Mobile responsive */
+/* Mobile Responsiveness */
 @media (max-width: 640px) {
-  .report-modal-overlay {
-    padding: 10px;
-  }
-  
   .report-modal {
-    max-height: 95vh;
-  }
-  
-  .report-modal-header {
-    padding: 16px 16px 0 16px;
+    margin: 20px;
+    max-width: none;
   }
   
   .report-modal-content {
-    padding: 0 16px 16px 16px;
+    padding: 20px;
   }
   
-  .report-modal-title {
-    font-size: 1.25rem;
+  .report-choice-button {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
   }
   
   .report-modal-actions {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
   
   .report-btn-cancel,
   .report-btn-submit {
     width: 100%;
-    justify-content: center;
   }
 }

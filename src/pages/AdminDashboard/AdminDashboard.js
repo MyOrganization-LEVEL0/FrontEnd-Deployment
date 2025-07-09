@@ -1,127 +1,157 @@
 // src/pages/AdminDashboard/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
+import { adminService } from '../../services/adminService';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pending');
+  const [dashboardStats, setDashboardStats] = useState({
+    pending_recipes: 0,
+    pending_reports: 0,
+    flagged_recipes: 0,
+    total_recipes: 0,
+    published_recipes: 0,
+    rejected_recipes: 0
+  });
   const [recipes, setRecipes] = useState([]);
   const [userReports, setUserReports] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data - replace with API calls
+  // Load initial data
   useEffect(() => {
-    // Mock pending recipes for approval
-    setRecipes([
-      {
-        id: 1,
-        title: 'Traditional Bibingka',
-        author: 'Maria Santos',
-        authorId: 1,
-        category: 'Kakanin',
-        description: 'Authentic Filipino rice cake made with coconut milk and topped with cheese.',
-        ingredients: ['2 cups rice flour', '1 cup coconut milk', '2 eggs', 'Cheese for topping'],
-        instructions: ['Mix rice flour and coconut milk...', 'Add eggs and mix well...'],
-        image: '/imgs/bibingka.jpg',
-        submittedAt: '2024-02-15T10:30:00Z',
-        status: 'pending',
-        flagged: false,
-        reportCount: 0
-      },
-      {
-        id: 2,
-        title: 'Instant Halo-Halo',
-        author: 'Juan Dela Cruz',
-        authorId: 2,
-        category: 'Dessert',
-        description: 'Quick and easy halo-halo recipe using store-bought ingredients.',
-        ingredients: ['1 can condensed milk', '1 cup shaved ice', 'Mixed beans', 'Ube ice cream'],
-        instructions: ['Layer ingredients in tall glass...', 'Top with ice cream...'],
-        image: '/imgs/halo-halo.jpg',
-        submittedAt: '2024-02-14T15:45:00Z',
-        status: 'pending',
-        flagged: true,
-        reportCount: 2
-      },
-      {
-        id: 3,
-        title: 'Leche Flan Supreme',
-        author: 'Ana Reyes',
-        authorId: 3,
-        category: 'Custard',
-        description: 'Rich and creamy leche flan with caramel sauce.',
-        ingredients: ['12 egg yolks', '1 can condensed milk', '1 can evaporated milk', '1 cup sugar'],
-        instructions: ['Make caramel sauce...', 'Mix egg yolks with milk...'],
-        image: '/imgs/leche-flan.jpg',
-        submittedAt: '2024-02-13T09:20:00Z',
-        status: 'pending',
-        flagged: false,
-        reportCount: 0
-      }
-    ]);
-
-    // Mock user reports
-    setUserReports([
-      {
-        id: 1,
-        reportedUser: 'BadUser123',
-        reportedUserId: 5,
-        reportedBy: 'GoodUser456',
-        reportedById: 8,
-        reason: 'Inappropriate content',
-        description: 'User posted offensive comments on my recipe and used inappropriate language.',
-        reportedAt: '2024-02-15T14:20:00Z',
-        status: 'pending',
-        priority: 'high',
-        evidence: 'Screenshots attached'
-      },
-      {
-        id: 2,
-        reportedUser: 'SpammerAccount',
-        reportedUserId: 12,
-        reportedBy: 'CommunityMod',
-        reportedById: 15,
-        reason: 'Spam/Self-promotion',
-        description: 'User constantly posting links to external websites and promoting their own business.',
-        reportedAt: '2024-02-14T11:15:00Z',
-        status: 'pending',
-        priority: 'medium',
-        evidence: 'Multiple comment screenshots'
-      }
-    ]);
+    loadDashboardData();
   }, []);
 
+  // Load data when tab changes
+  useEffect(() => {
+    if (activeTab === 'pending') {
+      loadPendingRecipes();
+    } else if (activeTab === 'flagged') {
+      loadFlaggedRecipes();
+    } else if (activeTab === 'reports') {
+      loadReports();
+    }
+  }, [activeTab]);
+
+  const loadDashboardData = async () => {
+    try {
+      setDataLoading(true);
+      const stats = await adminService.getDashboardStats();
+      setDashboardStats(stats);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setError('Failed to load dashboard data');
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  const loadPendingRecipes = async () => {
+    try {
+      setDataLoading(true);
+      const data = await adminService.getPendingRecipes();
+      setRecipes(data.results || []);
+    } catch (error) {
+      console.error('Error loading pending recipes:', error);
+      setError('Failed to load pending recipes');
+      setRecipes([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  const loadFlaggedRecipes = async () => {
+    try {
+      setDataLoading(true);
+      const data = await adminService.getFlaggedRecipes();
+      setRecipes(data.results || []);
+    } catch (error) {
+      console.error('Error loading flagged recipes:', error);
+      setError('Failed to load flagged recipes');
+      setRecipes([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  const loadReports = async () => {
+    try {
+      setDataLoading(true);
+      const data = await adminService.getReports();
+      setUserReports(data.results || []);
+    } catch (error) {
+      console.error('Error loading reports:', error);
+      setError('Failed to load reports');
+      setUserReports([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
   // Recipe management functions
-  const handleRecipeAction = (action, recipeId, reason = null) => {
-    setLoading(true);
-    setTimeout(() => {
-      setRecipes(prev => prev.map(recipe => 
-        recipe.id === recipeId ? { ...recipe, status: action, rejectionReason: reason } : recipe
-      ));
-      setLoading(false);
+  const handleRecipeAction = async (action, recipeId, reason = null) => {
+    try {
+      setLoading(true);
+      setError(null);
       
-      const actionText = action === 'approved' ? 'approved' : 'rejected';
+      await adminService.handleRecipeAction(recipeId, action, reason);
+      
+      // Remove recipe from current list
+      setRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
+      
+      // Refresh dashboard stats
+      await loadDashboardData();
+      
+      const actionText = action === 'approve' ? 'approved' : 'rejected';
       alert(`Recipe ${actionText} successfully!`);
-    }, 1000);
+    } catch (error) {
+      console.error('Error performing recipe action:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // User report functions
-  const handleReportAction = (action, reportId) => {
-    setLoading(true);
-    setTimeout(() => {
-      setUserReports(prev => prev.map(report => 
-        report.id === reportId ? { ...report, status: action } : report
-      ));
-      setLoading(false);
+  const handleReportAction = async (action, reportId) => {
+    try {
+      setLoading(true);
+      setError(null);
       
-      const actionText = action === 'resolved' ? 'resolved' : action === 'dismissed' ? 'dismissed' : 'investigating';
+      let options = {};
+      
+      // Handle mute action
+      if (action === 'mute') {
+        const duration = prompt('Mute duration in hours (default: 24):', '24');
+        if (duration === null) return; // User cancelled
+        options.duration = parseInt(duration) || 24;
+      }
+      
+      await adminService.handleReportAction(reportId, action, options);
+      
+      // Update report status in the list
+      setUserReports(prev => prev.map(report => 
+        report.id === reportId ? { ...report, status: 'resolved' } : report
+      ));
+      
+      // Refresh dashboard stats
+      await loadDashboardData();
+      
+      const actionText = action === 'mute' ? 'muted' : 'resolved';
       alert(`Report ${actionText} successfully!`);
-    }, 1000);
+    } catch (error) {
+      console.error('Error performing report action:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter functions
+  // Filter functions for display
   const pendingRecipes = recipes.filter(recipe => recipe.status === 'pending');
-  const flaggedRecipes = recipes.filter(recipe => recipe.flagged || recipe.reportCount > 0);
+  const flaggedRecipes = recipes;
   const pendingReports = userReports.filter(report => report.status === 'pending');
 
   // Get time ago helper
@@ -134,6 +164,39 @@ const AdminDashboard = () => {
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
+
+  // Format recipe data for display
+  const formatRecipeForDisplay = (recipe) => {
+    return {
+      id: recipe.id,
+      title: recipe.title,
+      author: recipe.author?.username || recipe.author?.full_name || 'Unknown',
+      authorId: recipe.author?.id,
+      category: recipe.category,
+      description: recipe.description,
+      ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+      instructions: Array.isArray(recipe.instructions) ? recipe.instructions : [],
+      image: recipe.featured_image || recipe.image_urls?.[0] || '/imgs/default-recipe.jpg',
+      submittedAt: recipe.created_at,
+      status: recipe.status,
+      flagged: recipe.flagged || recipe.report_count > 0,
+      reportCount: recipe.report_count || 0
+    };
+  };
+
+  if (dataLoading && !recipes.length && !userReports.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -148,24 +211,30 @@ const AdminDashboard = () => {
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 <span className="text-sm text-gray-600">
-                  {pendingRecipes.length} pending recipes, {pendingReports.length} reports
+                  {dashboardStats.pending_recipes} pending recipes, {dashboardStats.pending_reports} reports
                 </span>
               </div>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                View Guidelines
-              </button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        </div>
+      )}
+
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 py-4">
         <nav className="flex space-x-8 border-b border-gray-200">
           {[
-            { id: 'pending', label: 'Pending Recipes', icon: '📝', count: pendingRecipes.length },
-            { id: 'flagged', label: 'Flagged Content', icon: '🚩', count: flaggedRecipes.length },
-            { id: 'reports', label: 'User Reports', icon: '📋', count: pendingReports.length },
+            { id: 'pending', label: 'Pending Recipes', icon: '📝', count: dashboardStats.pending_recipes },
+            { id: 'flagged', label: 'Flagged Content', icon: '🚩', count: dashboardStats.flagged_recipes },
+            { id: 'reports', label: 'User Reports', icon: '📋', count: dashboardStats.pending_reports },
             { id: 'history', label: 'Moderation History', icon: '📚', count: null }
           ].map((tab) => (
             <button
@@ -198,94 +267,118 @@ const AdminDashboard = () => {
               <h2 className="text-xl font-semibold text-gray-900">Pending Recipe Approvals</h2>
             </div>
 
-            <div className="grid gap-6">
-              {pendingRecipes.map((recipe) => (
-                <div key={recipe.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      <img
-                        src={recipe.image}
-                        alt={recipe.title}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{recipe.title}</h3>
-                            <p className="text-sm text-gray-600">by {recipe.author}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {recipe.flagged && (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                🚩 Auto-flagged
-                              </span>
-                            )}
-                            {recipe.reportCount > 0 && (
-                              <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                                {recipe.reportCount} user reports
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-700 mb-3">{recipe.description}</p>
-                        
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <h4 className="font-medium text-gray-900 mb-1">Ingredients:</h4>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                              {recipe.ingredients.slice(0, 3).map((ingredient, idx) => (
-                                <li key={idx}>• {ingredient}</li>
-                              ))}
-                              {recipe.ingredients.length > 3 && (
-                                <li className="text-gray-500">...and {recipe.ingredients.length - 3} more</li>
-                              )}
-                            </ul>
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900 mb-1">Instructions:</h4>
-                            <ol className="text-sm text-gray-600 space-y-1">
-                              {recipe.instructions.slice(0, 2).map((step, idx) => (
-                                <li key={idx}>{idx + 1}. {step}</li>
-                              ))}
-                              {recipe.instructions.length > 2 && (
-                                <li className="text-gray-500">...and {recipe.instructions.length - 2} more steps</li>
-                              )}
-                            </ol>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-3 pt-4 border-t border-gray-200">
-                          <button
-                            onClick={() => handleRecipeAction('approved', recipe.id)}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                          >
-                            ✅ Approve
-                          </button>
-                          <button
-                            onClick={() => {
-                              const reason = prompt('Reason for rejection (optional):');
-                              handleRecipeAction('rejected', recipe.id, reason);
+            {dataLoading ? (
+              <div className="text-center py-8">
+                <svg className="animate-spin h-6 w-6 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-gray-600">Loading pending recipes...</p>
+              </div>
+            ) : pendingRecipes.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🎉</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pending Recipes</h3>
+                <p className="text-gray-600">All recipes have been reviewed!</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {pendingRecipes.map((recipe) => {
+                  const displayRecipe = formatRecipeForDisplay(recipe);
+                  return (
+                    <div key={displayRecipe.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                      <div className="p-6">
+                        <div className="flex items-start gap-4">
+                          <img
+                            src={displayRecipe.image}
+                            alt={displayRecipe.title}
+                            className="w-24 h-24 object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.src = '/imgs/default-recipe.jpg';
                             }}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                          >
-                            ❌ Reject
-                          </button>
-                          <button
-                            onClick={() => {
-                              alert('Opening full recipe preview...');
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                          >
-                            👁️ Full Preview
-                          </button>
+                          />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">{displayRecipe.title}</h3>
+                                <p className="text-sm text-gray-600">by {displayRecipe.author}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {displayRecipe.flagged && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                    🚩 Auto-flagged
+                                  </span>
+                                )}
+                                {displayRecipe.reportCount > 0 && (
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
+                                    {displayRecipe.reportCount} user reports
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <p className="text-gray-700 mb-3">{displayRecipe.description}</p>
+                            
+                            <div className="grid md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <h4 className="font-medium text-gray-900 mb-1">Ingredients:</h4>
+                                <ul className="text-sm text-gray-600 space-y-1">
+                                  {displayRecipe.ingredients.slice(0, 3).map((ingredient, idx) => (
+                                    <li key={idx}>• {typeof ingredient === 'string' ? ingredient : ingredient.text || ingredient.name || JSON.stringify(ingredient)}</li>
+                                  ))}
+                                  {displayRecipe.ingredients.length > 3 && (
+                                    <li className="text-gray-500">...and {displayRecipe.ingredients.length - 3} more</li>
+                                  )}
+                                </ul>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900 mb-1">Instructions:</h4>
+                                <ol className="text-sm text-gray-600 space-y-1">
+                                  {displayRecipe.instructions.slice(0, 2).map((step, idx) => (
+                                    <li key={idx}>{idx + 1}. {typeof step === 'string' ? step : step.text || step.instruction || JSON.stringify(step)}</li>
+                                  ))}
+                                  {displayRecipe.instructions.length > 2 && (
+                                    <li className="text-gray-500">...and {displayRecipe.instructions.length - 2} more steps</li>
+                                  )}
+                                </ol>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-3 pt-4 border-t border-gray-200">
+                              <button
+                                onClick={() => handleRecipeAction('approve', displayRecipe.id)}
+                                disabled={loading}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                              >
+                                ✅ Approve
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const reason = prompt('Reason for rejection (optional):');
+                                  handleRecipeAction('reject', displayRecipe.id, reason);
+                                }}
+                                disabled={loading}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                              >
+                                ❌ Reject
+                              </button>
+                              <button
+                                onClick={() => {
+                                  window.open(`/recipe/${displayRecipe.id}`, '_blank');
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                              >
+                                👁️ Full Preview
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -294,64 +387,90 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900">Flagged Content Review</h2>
             
-            <div className="grid gap-6">
-              {flaggedRecipes.map((recipe) => (
-                <div key={recipe.id} className="bg-white rounded-lg shadow-sm border border-red-200">
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      <img
-                        src={recipe.image}
-                        alt={recipe.title}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{recipe.title}</h3>
-                            <p className="text-sm text-gray-600">by {recipe.author}</p>
+            {dataLoading ? (
+              <div className="text-center py-8">
+                <svg className="animate-spin h-6 w-6 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-gray-600">Loading flagged content...</p>
+              </div>
+            ) : flaggedRecipes.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🎉</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Flagged Content</h3>
+                <p className="text-gray-600">No content has been flagged for review!</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {flaggedRecipes.map((recipe) => {
+                  const displayRecipe = formatRecipeForDisplay(recipe);
+                  return (
+                    <div key={displayRecipe.id} className="bg-white rounded-lg shadow-sm border border-red-200">
+                      <div className="p-6">
+                        <div className="flex items-start gap-4">
+                          <img
+                            src={displayRecipe.image}
+                            alt={displayRecipe.title}
+                            className="w-24 h-24 object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.src = '/imgs/default-recipe.jpg';
+                            }}
+                          />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">{displayRecipe.title}</h3>
+                                <p className="text-sm text-gray-600">by {displayRecipe.author}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {displayRecipe.flagged && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                    🚩 Flagged
+                                  </span>
+                                )}
+                                {displayRecipe.reportCount > 0 && (
+                                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
+                                    {displayRecipe.reportCount} reports
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <p className="text-gray-700 mb-3">{displayRecipe.description}</p>
+                            
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleRecipeAction('approve', displayRecipe.id)}
+                                disabled={loading}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                              >
+                                ✅ Approve (Safe)
+                              </button>
+                              <button
+                                onClick={() => handleRecipeAction('reject', displayRecipe.id)}
+                                disabled={loading}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                              >
+                                ❌ Remove Content
+                              </button>
+                              <button
+                                onClick={() => {
+                                  window.open(`/recipe/${displayRecipe.id}`, '_blank');
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                              >
+                                🔍 Detailed Review
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {recipe.flagged && (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                🚩 Flagged
-                              </span>
-                            )}
-                            {recipe.reportCount > 0 && (
-                              <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                                {recipe.reportCount} reports
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-700 mb-3">{recipe.description}</p>
-                        
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleRecipeAction('approved', recipe.id)}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                          >
-                            ✅ Approve (Safe)
-                          </button>
-                          <button
-                            onClick={() => handleRecipeAction('rejected', recipe.id)}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                          >
-                            ❌ Remove Content
-                          </button>
-                          <button
-                            onClick={() => alert('Opening detailed review...')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                          >
-                            🔍 Detailed Review
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -360,75 +479,103 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900">User Reports</h2>
             
-            <div className="grid gap-6">
-              {userReports.map((report) => (
-                <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Report against: {report.reportedUser}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Reported by: {report.reportedBy} • {getTimeAgo(report.reportedAt)}
-                        </p>
+            {dataLoading ? (
+              <div className="text-center py-8">
+                <svg className="animate-spin h-6 w-6 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-gray-600">Loading reports...</p>
+              </div>
+            ) : userReports.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🎉</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reports</h3>
+                <p className="text-gray-600">No user reports have been submitted!</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {userReports.map((report) => (
+                  <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Report against: {report.reported_user || 'Unknown User'}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Reported by: {report.reported_by?.username || report.reported_by?.full_name || 'Unknown'} • {getTimeAgo(report.created_at)}
+                          </p>
+                          {report.report_target && (
+                            <p className="text-sm text-blue-600 mt-1">
+                              📍 {report.report_target}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                            {report.report_type}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            report.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                            report.status === 'dismissed' ? 'bg-gray-100 text-gray-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {report.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          report.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          report.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {report.priority} priority
-                        </span>
-                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
-                          {report.reason}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Description:</h4>
-                      <p className="text-gray-700">{report.description}</p>
-                    </div>
-                    
-                    {report.evidence && (
+                      
                       <div className="mb-4">
-                        <h4 className="font-medium text-gray-900 mb-2">Evidence:</h4>
-                        <p className="text-sm text-gray-600">{report.evidence}</p>
+                        <h4 className="font-medium text-gray-900 mb-2">Description:</h4>
+                        <p className="text-gray-700">{report.description || 'No description provided'}</p>
                       </div>
-                    )}
-                    
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleReportAction('resolved', report.id)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                      >
-                        ✅ Resolve (Take Action)
-                      </button>
-                      <button
-                        onClick={() => handleReportAction('dismissed', report.id)}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-                      >
-                        ❌ Dismiss Report
-                      </button>
-                      <button
-                        onClick={() => handleReportAction('investigating', report.id)}
-                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
-                      >
-                        🔍 Mark as Investigating
-                      </button>
-                      <button
-                        onClick={() => alert('Viewing user profile and history...')}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                      >
-                        👤 View User Profile
-                      </button>
+                      
+                      {report.comment && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">Reported Comment:</h4>
+                          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-red-400">
+                            <p className="text-sm text-gray-700">"{report.comment.content}"</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              On recipe: "{report.comment.recipe_title}"
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {report.recipe && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">Related Recipe:</h4>
+                          <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-blue-400">
+                            <p className="text-sm text-gray-700">"{report.recipe.title}" by {report.recipe.author}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {report.status === 'pending' && (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleReportAction('mute', report.id)}
+                            disabled={loading}
+                            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition disabled:opacity-50"
+                          >
+                            🔇 Mute User
+                          </button>
+                          <button
+                            onClick={() => handleReportAction('resolve', report.id)}
+                            disabled={loading}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                          >
+                            ✅ Resolve
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
