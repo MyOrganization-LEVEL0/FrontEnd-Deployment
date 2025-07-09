@@ -84,5 +84,22 @@ export const adminService = {
       }
       throw new Error('Failed to perform report action');
     }
+  },
+  getModerationHistory: async (params = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params.page) queryParams.append('page', params.page);
+      if (params.page_size) queryParams.append('page_size', params.page_size);
+      if (params.start_date) queryParams.append('start_date', params.start_date);
+      if (params.end_date) queryParams.append('end_date', params.end_date);
+      if (params.action) queryParams.append('action', params.action);
+      
+      const response = await api.get(`/recipes/admin/moderation-history/?${queryParams.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching moderation history:', error);
+      throw new Error('Failed to load moderation history');
+    }
   }
 };

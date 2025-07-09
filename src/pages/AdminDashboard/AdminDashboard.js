@@ -1,6 +1,7 @@
 // src/pages/AdminDashboard/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../../services/adminService';
+import SimpleModerationHistory from '../../components/SimpleModerationHistory';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -582,22 +583,7 @@ const AdminDashboard = () => {
         {/* History Tab */}
         {activeTab === 'history' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Moderation History</h2>
-            
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6">
-                <div className="text-center py-8">
-                  <div className="text-6xl mb-4">📚</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Moderation History</h3>
-                  <p className="text-gray-600">
-                    This section will show your past moderation actions, including approved/rejected recipes and resolved reports.
-                  </p>
-                  <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    View Full History
-                  </button>
-                </div>
-              </div>
-            </div>
+            <SimpleModerationHistory />
           </div>
         )}
       </div>
